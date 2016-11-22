@@ -25,7 +25,7 @@ The main repo currently has eight packages:
 
 The diagram below represents the relations between them. You can see for example that **metal** is the most low level package, while **metal-jsx** and **metal-soy** are both built on top of the incremental dom integration:
 
-![Packages](/Users/maira/Documents/Liferay/repos/metal-training/diagrams/repos.png)
+![Packages](../diagrams/repos.png)
 
 Each package has its own package.json and is set up so that it provides two
 types of entry points: one for commonjs usage (**main**) and another for ES6
