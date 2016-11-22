@@ -30,7 +30,7 @@ The diagram below represents the relations between them. You can see for example
 Each package has its own package.json and is set up so that it provides two
 types of entry points: one for commonjs usage (**main**) and another for ES6
 modules (**jsnext:main**). Check out metal-dom's
-[package.json](packages/metal-dom/package.json#L11) file as an example.
+[package.json](https://github.com/metal/metal.js/blob/master/packages/metal-dom/package.json#L11) file as an example.
 
 ## Contributing
 
@@ -38,6 +38,6 @@ For detailed information about the workflow used to develop for Metal.js (like b
 
 ## Next steps
 
-Let's start actually looking at the code now. We'll begin with the most simple package: **metal**.
+Let's start actually looking at the code now. We'll begin with the simplest package: **metal**.
 
 [↪ Package: metal](metal.js/metal.md)
