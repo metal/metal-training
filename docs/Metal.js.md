@@ -14,14 +14,14 @@ repo. It's perfect for this use case and it's been used by
 
 The main repo currently has eight packages:
 
-* [metal](metal.js/metal.md) - Utility functions.
-* [metal-events](metal.js/metal-events.md) - Custom event handling.
-* [metal-dom](metal.js/metal-dom.md) - DOM related utilities.
-* [metal-state](metal.js/metal-state.md) - Data configuration and tracking.
-* [metal-component](metal.js/metal-component.md) - Basic component structure.
-* [metal-incremental-dom](metal.js/metal-incremental-dom.md) - Integration with incremental dom.
-* [metal-soy](metal.js/metal-soy.md) - Integration with soy templates.
-* [metal-jsx](metal.js/metal-jsx.md) - Integration with JSX templates.
+* [metal](http://npmjs.com/package/metal) - Utility functions.
+* [metal-events](http://npmjs.com/package/metal-events) - Custom event handling.
+* [metal-dom](http://npmjs.com/package/metal-dom) - DOM related utilities.
+* [metal-state](http://npmjs.com/package/metal-state) - Data configuration and tracking.
+* [metal-component](http://npmjs.com/package/metal-component) - Basic component structure.
+* [metal-incremental-dom](http://npmjs.com/package/metal-incremental-dom) - Integration with incremental dom.
+* [metal-soy](http://npmjs.com/package/metal-soy) - Integration with soy templates.
+* [metal-jsx](http://npmjs.com/package/metal-jsx) - Integration with JSX templates.
 
 The diagram below represents the relations between them. You can see for example that **metal** is the most low level package, while **metal-jsx** and **metal-soy** are both built on top of the incremental dom integration:
 
