@@ -41,6 +41,21 @@ out this [fiddle](https://jsfiddle.net/metaljs/3gLkgtmz/) example.
 
 <script async src="//jsfiddle.net/metaljs/3gLkgtmz/embed/"></script>
 
+```js
+class GrandParent {}
+GrandParent.STATIC_PROP = 1;
+
+class Parent extends GrandParent {}
+Parent.STATIC_PROP = 2;
+
+class Base extends Parent {}
+Base.STATIC_PROP = 3;
+
+collectSuperClassesProperty(Base, 'STATIC_PROP'); // [1]
+collectSuperClassesProperty(Parent, 'STATIC_PROP'); // [2, 1]
+collectSuperClassesProperty(GrandParent, 'STATIC_PROP'); // [3, 2, 1]
+```
+
 This is done via a loop that goes up the hierarchy by checking the current
 class' `__proto__` property, which is where browsers store a reference to
 the super class. The loop ends when the super class is `Function`, which
@@ -49,7 +64,7 @@ for the requested property is stored in an array, which is returned at the end.
 You can check the code [here](https://github.com/metal/metal.js/blob/fc222c16fec43b4a5ed6a8ae8339247a4c3ca16c/packages/metal/src/coreNamed.js#L47).
 
 While on its own this function may not be very useful, it's used directly by
-`mergeSuperClassesProperty`, an important function that will explained next.
+`mergeSuperClassesProperty`, an important function that will be explained next.
 
 ### mergeSuperClassesProperty
 
