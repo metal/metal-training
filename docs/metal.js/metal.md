@@ -35,16 +35,21 @@ understand just by reading the code.
 
 ### collectSuperClassesProperty
 
-This receives a class and a property name, and returns an array with the values
+This receives a class and a property name, returning an array with the values
 for that static property in the given class and in all of its ancestors. Check
-out this [fiddle]() example.
+out this [fiddle](https://jsfiddle.net/metaljs/3gLkgtmz/) example.
 
-This is done via a loop that goes up to ancestors by checking the current
+<script async src="//jsfiddle.net/metaljs/3gLkgtmz/embed/"></script>
+
+This is done via a loop that goes up the hierarchy by checking the current
 class' `__proto__` property, which is where browsers store a reference to
 the super class. The loop ends when the super class is `Function`, which
-indicates that we've reached the root. For each class we reach, we store the
-value of the requested property in an array, and return it at the end. You can
-check the code [here](https://github.com/metal/metal.js/blob/fc222c16fec43b4a5ed6a8ae8339247a4c3ca16c/packages/metal/src/coreNamed.js#L47).
+indicates that we've reached the root. For each class that's reached, its value
+for the requested property is stored in an array, which is returned at the end.
+You can check the code [here](https://github.com/metal/metal.js/blob/fc222c16fec43b4a5ed6a8ae8339247a4c3ca16c/packages/metal/src/coreNamed.js#L47).
+
+While on its own this function may not be very useful, it's used directly by
+`mergeSuperClassesProperty`, an important function that will explained next.
 
 ### mergeSuperClassesProperty
 
