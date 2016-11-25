@@ -103,7 +103,7 @@ To help with these use cases, Metal.js provides a compatibility mode, where some
 features that may have changed, or even removed, can work like before. This mode
 can be turned on via the `enableCompatibilityMode` function.
 
-```
+```js
 enableCompatibilityMode(); // that's all you need
 ```
 
@@ -122,3 +122,9 @@ in incremental dom components, for example, is implemented inside the
 **metal-incremental-dom** package, which uses the `getCompatibilityModeData`
 function from **metal** to determine if the mode is enabled. Check it out
 [here](https://github.com/metal/metal.js/blob/2c50c73cdddc97c2a34c93abe2e06997bd6b6456/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L283).
+
+## Next steps
+
+Next we'll take a look at: **metal-events**.
+
+[↪ Package: metal-events](metal.js/metal-events.md)
