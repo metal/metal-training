@@ -74,12 +74,12 @@ class Parent extends GrandParent {}
 Parent.STATIC_PROP = 2;
 
 class Main extends Parent {}
-Parent.STATIC_PROP = 3;
+Main.STATIC_PROP = 3;
 
-const addAll = arr => arr.reduce((a, b) => a + b);
-getStaticProperty(Main, 'STATIC_PROP', addAll); // 6
-getStaticProperty(Parent, 'STATIC_PROP', addAll); // 3
-getStaticProperty(GrandParent, 'STATIC_PROP', addAll); // 1
+const add = (a, b) => a + b;
+getStaticProperty(Main, 'STATIC_PROP', add); // 6
+getStaticProperty(Parent, 'STATIC_PROP', add); // 3
+getStaticProperty(GrandParent, 'STATIC_PROP', add); // 1
 ```
 
 This is done via a recursion that goes up the hierarchy by checking the current
