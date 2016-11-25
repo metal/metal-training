@@ -127,4 +127,4 @@ function from **metal** to determine if the mode is enabled. Check it out
 
 Next we'll take a look at: **metal-events**.
 
-[↪ Package: metal-events](metal.js/metal-events.md)
+[↪ Package: metal-events](metal-events.md)

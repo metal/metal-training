@@ -33,16 +33,10 @@ import {
 import EventEmitter from 'metal-events';
 ```
 
-You can see that besides the emitter there are also a few others helpers. We'll
-talk about all of them here.
-
 The entry file is
 [packages/metal-events/src/events.js](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/events.js)
 
-### EventEmitter
+You can see that besides the emitter there are also a few others helpers. We'll
+talk about all of them here, but let's first start with **EventEmitter** itself.
 
-### EventEmitterHandle
-
-### EventEmitterHandler
-
-### EventEmitterProxy
+[↪ EventEmitter](metal-events/EventEmitter.md)
