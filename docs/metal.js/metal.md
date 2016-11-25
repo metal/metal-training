@@ -28,18 +28,24 @@ import * as metal from 'metal';
 console.log(Object.keys(metal));
 ```
 
+You can also check what this module exports by looking at its entry file's code,
+which is located at
+[packages/metal/src/metal.js](https://github.com/metal/metal.js/blob/master/packages/metal/src/metal.js),
+as can be seen in its [package.json](https://github.com/metal/metal.js/blob/master/packages/metal/package.json#L16).
+
 Most of the exported functions are very straightforward, doing simple type
 checks or handling common functionalities such as comparing arrays. Here we'll
 focus on the more complex and important ones. The others are simple enough to
 understand just by reading the code.
 
-### collectSuperClassesProperty
+### getStaticProperty
 
-This receives a class and a property name, returning an array with the values
-for that static property in the given class and in all of its ancestors. Check
-out this [fiddle](https://jsfiddle.net/metaljs/3gLkgtmz/) example.
-
-<script async src="//jsfiddle.net/metaljs/3gLkgtmz/embed/"></script>
+This [function](https://github.com/metal/metal.js/blob/3edfe6d8e1735c249a31d1dd0af46aacd2121fda/packages/metal/src/coreNamed.js#L120)
+returns a static property's value for a given class, taking the values from
+super classes into account. Some browsers already handle this automatically,
+inheriting static properties. This function is useful to support this kind of
+functionality in all browsers. Check out this
+[fiddle](https://jsfiddle.net/metaljs/jbofym7e/) example.
 
 ```js
 class GrandParent {}
@@ -49,36 +55,16 @@ class Parent extends GrandParent {}
 Parent.STATIC_PROP = 2;
 
 class Main extends Parent {}
-Main.STATIC_PROP = 3;
 
-collectSuperClassesProperty(Main, 'STATIC_PROP'); // [1]
-collectSuperClassesProperty(Parent, 'STATIC_PROP'); // [2, 1]
-collectSuperClassesProperty(GrandParent, 'STATIC_PROP'); // [3, 2, 1]
+getStaticProperty(Main, 'STATIC_PROP'); // 2
+getStaticProperty(Parent, 'STATIC_PROP'); // 2
+getStaticProperty(GrandParent, 'STATIC_PROP'); // 1
 ```
 
-This is done via a loop that goes up the hierarchy by checking the current
-class' `__proto__` property, which is where browsers store a reference to
-the super class. The loop ends when the super class is `Function`, which
-indicates that we've reached the root. For each class that's reached, its value
-for the requested property is stored in an array, which is returned at the end.
-You can check the code [here](https://github.com/metal/metal.js/blob/fc222c16fec43b4a5ed6a8ae8339247a4c3ca16c/packages/metal/src/coreNamed.js#L47).
-
-While on its own this function may not be very useful, it's used directly by
-`mergeSuperClassesProperty`, an important function that will be explained next.
-
-### mergeSuperClassesProperty
-
-This is similar to `collectSuperClassesProperty`, receiving a class and property
-name as well, but instead of just collecting the property's values this function
-merges them all into one by using the function received as its third argument.
-
-In the end, the merged value is stored in a new property of the given class, so
-the whole calculation can be skipped if the function is called again. The name
-of the new property is the original name plus the suffix `_MERGED`.
-
-This function will return `true` if the value was merged for the first time, or
-`false` if it was reused from a previous call. Check out this
-[fiddle](https://jsfiddle.net/metaljs/2dcmzswu/) example.
+If you check the code you'll see that this function also accepts a function as
+its third (optional) argument. When one is passed, the property value won't be
+simply inherited, but merged according to that function instead. Check out this
+[fiddle](https://jsfiddle.net/metaljs/b9q5LL7z/) example.
 
 ```js
 class GrandParent {}
@@ -88,18 +74,22 @@ class Parent extends GrandParent {}
 Parent.STATIC_PROP = 2;
 
 class Main extends Parent {}
-Main.STATIC_PROP = 3;
+Parent.STATIC_PROP = 3;
 
 const addAll = arr => arr.reduce((a, b) => a + b);
-mergeSuperClassesProperty(Main, 'STATIC_PROP', addAll);
-mergeSuperClassesProperty(Parent, 'STATIC_PROP', addAll);
-mergeSuperClassesProperty(GrandParent, 'STATIC_PROP', addAll);
-
-Main.STATIC_PROP_MERGED; // 6
-Parent.STATIC_PROP_MERGED; // 3
-GrandParent.STATIC_PROP_MERGED; // 1
+getStaticProperty(Main, 'STATIC_PROP', addAll); // 6
+getStaticProperty(Parent, 'STATIC_PROP', addAll); // 3
+getStaticProperty(GrandParent, 'STATIC_PROP', addAll); // 1
 ```
 
-Note that `collectSuperClassesProperty` is [used internally](https://github.com/metal/metal.js/blob/fc222c16fec43b4a5ed6a8ae8339247a4c3ca16c/packages/metal/src/coreNamed.js#L272) to get the property values that should be merged.
+This is done via a recursion that goes up the hierarchy by checking the current
+class' `__proto__` property, which is where browsers store a reference to
+the super class. The recursion ends when the super class is `Function`, which
+indicates that we've reached the root. You can check the code [here](https://github.com/metal/metal.js/blob/3edfe6d8e1735c249a31d1dd0af46aacd2121fda/packages/metal/src/coreNamed.js#L120).
+
+When calculated, the property's final value is stored as a new property of the
+given class, so the whole calculation can be skipped if the function is called
+again. The name of the new property is the original name plus the suffix
+`_MERGED`.
 
 ### Compatibility Mode
