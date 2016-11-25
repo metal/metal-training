@@ -93,3 +93,32 @@ again. The name of the new property is the original name plus the suffix
 `_MERGED`.
 
 ### Compatibility Mode
+
+Some breaking changes were introduced when Metal major versions (1.x and 2.x)
+were released, and others may be done on upcoming versions too. These can be
+hard to handle when upgrading Metal.js code, specially in cases where there's
+not much control over the whole codebase that may be affected by the changes.
+
+To help with these use cases, Metal.js provides a compatibility mode, where some
+features that may have changed, or even removed, can work like before. This mode
+can be turned on via the `enableCompatibilityMode` function.
+
+```
+enableCompatibilityMode(); // that's all you need
+```
+
+The features that are affected by this call are detailed in the function's [doc description](https://github.com/metal/metal.js/blob/3edfe6d8e1735c249a31d1dd0af46aacd2121fda/packages/metal/src/coreNamed.js#L46).
+
+If you look at the
+[code](https://github.com/metal/metal.js/blob/3edfe6d8e1735c249a31d1dd0af46aacd2121fda/packages/metal/src/coreNamed.js#L46)
+you'll notice that this function can receive an optional argument. This should
+be an object with data for configuring compatibility mode features, if needed.
+Again, supported configurations are detailed in the function's [doc description](https://github.com/metal/metal.js/blob/3edfe6d8e1735c249a31d1dd0af46aacd2121fda/packages/metal/src/coreNamed.js#L55).
+
+Note that though the function for enabling this mode is available in the
+**metal** package, the actual logic for reactivating each supported feature will
+live in the package where it belongs to. The usage of `keys` instead of `refs`
+in incremental dom components, for example, is implemented inside the
+**metal-incremental-dom** package, which uses the `getCompatibilityModeData`
+function from **metal** to determine if the mode is enabled. Check it out
+[here](https://github.com/metal/metal.js/blob/2c50c73cdddc97c2a34c93abe2e06997bd6b6456/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L283).
