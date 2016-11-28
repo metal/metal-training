@@ -208,6 +208,29 @@ calls `many` with `1` as the amount, as can be seen [here](https://github.com/me
 
 ## Tracking listeners (`onListener`)
 
+What if someone needs to be notified whenever a listener is subscribed? This
+can be done via `EventEmitter`'s  `onListener` function, as on this
+[fiddle](https://jsfiddle.net/metaljs/31grgezb/).
+
+```js
+const calls = [];
+const listener = (eventName) => calls.push(eventName);
+const emitter = new EventEmitter();
+
+// Let's subscribe to listener subscriptions.
+emitter.onListener(listener);
+emitter.on('myEvent', () => {});
+emitter.on('myEvent2', () => {});
+console.log(calls); // ['myEvent', 'myEvent2']
+```
+
+*[Debug example](../../../playground/examples/EventEmitter/onListener.js)*
+
+When `onListener` is called, it [stores](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L282)
+the given callback function. When new listeners are subscribed, these special
+callbacks will be triggered [inside addSingleListener_](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L95)
+by the function called `runListenerHandlers_`, which just [calls all of them](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L356).
+
 ## Facade (`setShouldUseFacade`)
 
 By default no information about the event being triggered is passed to the
@@ -244,7 +267,6 @@ pass the triggered listeners. The function named `buildFacade_`
 is the one that [creates the object](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L115).
 It's then passed down to `runListeners_`, which [adds it](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L370)
 to the list of arguments that will be given to the listener.
-
 
 ## Default listeners
 
