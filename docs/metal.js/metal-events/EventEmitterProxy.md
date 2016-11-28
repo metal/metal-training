@@ -56,6 +56,31 @@ know that it should emit it at the target as well.
 The listener subscribed by the proxy to the origin emitter is `emitOnTarget_`,
 which just [emits the event on the target](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L98).
 
+## Blacklist / Whitelist
+
+What if you want events to be proxied, but with a few exceptions? You can
+pass a blacklist of event names to `EventEmitterProxy`, like on this
+[fiddle](https://jsfiddle.net/metaljs/5cqLkgyo).
+
+And what of the opposite? You can pass a whitelist of event names to
+`EventEmitterProxy`, like on this
+[fiddle](https://jsfiddle.net/metaljs/yh61cqzx/), and it will proxy only those
+events.
+
+Both the blacklist and the whitelist are implemented inside `shouldProxyEvent_`,
+checking if the proxied event [matches the maps](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L150).
+
+## Changing the origin emitter
+
+`EventEmitterProxy` allows changing the origin emitter at any time via the
+function `setOriginEmitter`. You can see from its [code](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L132)
+that when this happens it will remove any existing listeners from the previous
+origin and automatically subscribe them to the new one instead.
+
+It's possible for the origin to be set to `null` for a while. In this case the
+event types listened on the target will be [stored temporarily](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L182),
+until an origin is set again, in which case they'll be properly linked to it.
+
 ## Next steps
 
 We're done with **metal-events**, so time to go to **metal-dom**.
