@@ -312,6 +312,35 @@ of if it's been called.
 
 ## Performance / memory optimizations
 
+If you look through `EventEmitter`'s code you'll find some optimizations. These
+are very important for this file, since a single project could have many
+emitters, so we need to be careful not to become a problem in this way.
+
+One such optimization can be found inside `andSingleListener_`, when
+[storing subscribed listeners](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitter.js#L103).
+At first this used to be a map of arrays that each new listener were simply
+pushed into, like this:
+
+```js
+this.events_[event].push(listener);
+```
+
+There may be cases where no listeners are ever subscribed to an emitter though,
+so we don't want to allocate an object to `this.events_` unless it's really
+going to be used. Also, even when subscriptions are made, it's quite common for
+an event to have only a single listener attached to it. In this case we avoid
+allocating an array, and just store the listener directly in the map. Once
+the second listener for an event is added, we create the array and put them both
+there. This is all done inside [addHandler_](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitter.js#L50).
+Although this doesn't look like much it can actually makes a big difference in
+memory allocation.
+
+Another little trick we do to allocate less arrays can be seen inside
+`toEventsArray_`, which is used by the functions that can receive either a
+single event name or an array. Instead of just creating a new array to wrap
+event names every time, we always reuse the same array object, changing its
+first item as you can see [here](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitter.js#L411).
+
 ## EventHandle
 
 Now let's take a look at: **EventHandle**.
