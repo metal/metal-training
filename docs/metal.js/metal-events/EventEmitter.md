@@ -157,21 +157,24 @@ So how does it work? Looking at `many`'s [code](https://github.com/metal/metal.j
 you'll see that it just loops through the event names, but the real job is done
 by another function: `many_`.
 
-What that does is just to wrap the given listener in another function that
-tracks the amount of times it's called, and [pass that as the listener instead](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L225), to the `addSingleListener_` function we've already seen before.
+What that does is just to wrap the given listener in another that unsubscribes
+itself when triggered the requested number of times, and then
+[pass that as the listener instead](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L225)
+to that `addSingleListener_` function we've already seen before.
 
 Note that the original listener is also passed to `addSingleListener_` as the
 fourth argument though, called `opt_origin`. When that happens,
 `addSingleListener_` [stores an object](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L97)
-instead of just the listener in the event's array. This object stores references
+instead of just the listener in the event's array. This object has references
 to both the original function and the wrapper built by `many_`.
 
 And why is that
-important at all? If you look `origin` up you'll see that it's only used inside
+important at all? If you look up `origin` you'll see that it's only used inside
 `matchesListener_`'s [code](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L239),
 when unsubscribing from the event. That's because we need to allow the developer
 to unsubscribe using the original function he's passed to `EventEmitter`, as
-he/she doesn't know about our internal wrapper. Time for another
+he/she doesn't know about our internal wrapper, which is the actual listener
+being triggered. Time for another
 [fiddle](https://jsfiddle.net/metaljs/3erLc60L/).
 
 ```js
@@ -181,6 +184,7 @@ const emitter = new EventEmitter();
 
 // Let's subscribe a listener to trigger at most two times.
 emitter.many('myEvent', 2, listener);
+// And then unsubscribe it.
 emitter.off('myEvent', listener);
 
 // No calls will trigger the listener.
@@ -189,11 +193,10 @@ emitter.emit('myEvent');
 console.log(callsCount); // 0
 ```
 
-`matchesListener_` can then
-check if either the listener or its `origin` matches the function to be
-unsubscribed.
+To accomplish this `matchesListener_` checks if either the listener or its
+`origin` match the function to be unsubscribed.
 
-`EventEmitter` also provides a similar function called `once`, which just
+`EventEmitter` also provides a similar helper function called `once`, which just
 calls `many` with `1` as the amount, as can be seen [here](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L293).
 
 ## Facade (`setShouldUseFacade`)
