@@ -6,6 +6,8 @@ classes.
 
 ## Subscribing (`on`)
 
+*[Debug example](../../../playground/examples/EventEmitter-on.js)*
+
 The main functionality of `EventEmitter` is simply subscribing to an object's
 events. This can be done either via the `on` or the `addListener` function. Both
 names are supported because they're two known patterns, but they work exactly
@@ -43,6 +45,8 @@ an array for that event (that's what [really happens](https://github.com/metal/m
 most of the times anyway).
 
 ## Emitting (`emit`)
+
+*[Debug example](../../../playground/examples/EventEmitter-emit.js)*
 
 Now that we have an idea of how subscribing is done, we need to understand how
 the event actually triggers these subscribed listeners. That happens when the
@@ -85,6 +89,8 @@ there that handles things related to [default listeners](#default-listeners) and
 [facade](#facade-setshouldusefacade), but we'll get to those later.
 
 ## Unsubscribing (`off`)
+
+*[Debug example](../../../playground/examples/EventEmitter-off.js)*
 
 What if you want to stop listening to a previously subscribed event? Well you
 can do that via the `off` or the `removeListener` functions. Both work the same
@@ -131,6 +137,8 @@ straightforward, its [code](https://github.com/metal/metal.js/blob/071280367a2c6
 just removes all stored listeners for the requested events.
 
 ## Other subscription methods (`once`, `many`)
+
+*[Debug example](../../../playground/examples/EventEmitter-many.js)*
 
 There are times when the developer wants to listen to an event a fixed number
 of times. They can track this and unsubscribe to the event themselves, but

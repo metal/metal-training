@@ -18,7 +18,7 @@ module.exports = {
 	},
 	resolve: {
 		// We want webpack to use the ES6 version of metal.js source files, so that
-		// the source maps can work when debugging the playground code. 
+		// the source maps can work when debugging the playground code.
 		packageMains: ['jsnext:main', 'main']
 	},
 	devtool: 'source-map'

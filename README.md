@@ -36,11 +36,20 @@ use to run and debug the code as you learn how it works:
 2. Install npm dependencies: `npm install`.
 3. Run the watch script: `npm run watch`.
 4. Use the file at [playground/main.js](playground/main.js) to play with the
-Metal.js modules in ES6. The watch script will automatically build it for you.
-All main modules are already included in this repo's package.json, but feel free
-to install any others you also want to use.
+Metal.js modules in ES6. The watch script will automatically rebuild it for you
+whenever it changes. All main modules are already included in this repo's
+package.json, but feel free to install any others you also want to use.
 5. Open [playground/index.html](playground/index.html) in your browser to run
 your code.
+
+### Debug examples
+
+Every now and then you'll find some links to debug examples. These will point
+you to files inside the **playground** folder with some examples you can use to
+run the code we're explaining with a debugger. If you want to use them you can
+either copy the code to **playground/main.js** or change
+[webpack.config.js](webpack.config.js) to point to it instead, and then rebuild
+with `npm run build`.
 
 ### JSFiddle
 

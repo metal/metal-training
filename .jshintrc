@@ -3,6 +3,7 @@
   "bitwise": false,
   "browser": true,
   "curly": true,
+  "debug": true,
   "eqeqeq": true,
   "esnext": true,
   "evil": false,
