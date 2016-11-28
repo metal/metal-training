@@ -6,8 +6,6 @@ classes.
 
 ## Subscribing (`on`)
 
-*[Debug example](../../../playground/examples/EventEmitter-on.js)*
-
 The main functionality of `EventEmitter` is simply subscribing to an object's
 events. This can be done either via the `on` or the `addListener` function. Both
 names are supported because they're two known patterns, but they work exactly
@@ -21,6 +19,8 @@ const emitter = new EventEmitter();
 emitter.on('myEvent', listener);
 emitter.addListener('myEvent', listener);
 ```
+
+*[Debug example](../../../playground/examples/EventEmitter/on.js)*
 
 Since both functions work the same way, `addListener` is the one that contains
 the relevant code, and `on` simply calls it, as you can see [here](https://github.com/metal/metal.js/blob/2a6bb0014cfa729a16ec040cfaf93660871dd567/packages/metal-events/src/EventEmitter.js#L280).
@@ -45,8 +45,6 @@ an array for that event (that's what [really happens](https://github.com/metal/m
 most of the times anyway).
 
 ## Emitting (`emit`)
-
-*[Debug example](../../../playground/examples/EventEmitter-emit.js)*
 
 Now that we have an idea of how subscribing is done, we need to understand how
 the event actually triggers these subscribed listeners. That happens when the
@@ -76,6 +74,8 @@ As you can see, whenever `emit` is called for a given event name, the listeners
 subscribed to it will run. `emit` can receive any number of arguments after the
 event name, which will all be passed over to the triggered listeners.
 
+*[Debug example](../../../playground/examples/EventEmitter/emit.js)*
+
 As you can see from its [code](https://github.com/metal/metal.js/blob/c49fa217ca4712063fe30d96cf6e46ec23a4dcf2/packages/metal-events/src/EventEmitter.js#L140),
 `emit` works the following way:
 
@@ -89,8 +89,6 @@ there that handles things related to [default listeners](#default-listeners) and
 [facade](#facade-setshouldusefacade), but we'll get to those later.
 
 ## Unsubscribing (`off`)
-
-*[Debug example](../../../playground/examples/EventEmitter-off.js)*
 
 What if you want to stop listening to a previously subscribed event? Well you
 can do that via the `off` or the `removeListener` functions. Both work the same
@@ -115,6 +113,8 @@ emitter.emit('myEvent');
 console.log(callsCount1, callsCount2); // 0, 1
 ```
 
+*[Debug example](../../../playground/examples/EventEmitter/off.js)*
+
 The implementation for this is pretty straightforward. You can see [here](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L343)
 that `removeListener` simply calls the `off` function, since they do the same
 thing.
@@ -138,8 +138,6 @@ just removes all stored listeners for the requested events.
 
 ## Other subscription methods (`once`, `many`)
 
-*[Debug example](../../../playground/examples/EventEmitter-many.js)*
-
 There are times when the developer wants to listen to an event a fixed number
 of times. They can track this and unsubscribe to the event themselves, but
 `EventEmitter` provides an easy way to do this via the function called `many`.
@@ -160,6 +158,8 @@ emitter.emit('myEvent');
 emitter.emit('myEvent');
 console.log(callsCount); // 2
 ```
+
+*[Debug example](../../../playground/examples/EventEmitter/many.js)*
 
 So how does it work? Looking at `many`'s [code](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L192)
 you'll see that it just loops through the event names, but the real job is done

@@ -82,6 +82,8 @@ getStaticProperty(Parent, 'STATIC_PROP', add); // 3
 getStaticProperty(GrandParent, 'STATIC_PROP', add); // 1
 ```
 
+*[Debug example](../../playground/examples/metal/getStaticProperty.js)*
+
 This is done via a recursion that goes up the hierarchy by checking the current
 class' `__proto__` property, which is where browsers store a reference to
 the super class. The recursion ends when the super class is `Function`, which
