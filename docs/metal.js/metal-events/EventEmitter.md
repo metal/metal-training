@@ -66,8 +66,7 @@ emitter.emit('notMyEvent');
 // Same name, triggers the listener.
 emitter.emit('myEvent', 'foo', 'bar');
 
-console.log(calls);
-// [ [], [ "foo", "bar" ] ]
+console.log(calls); // [ [], [ "foo", "bar" ] ]
 ```
 
 As you can see, whenever `emit` is called for a given event name, the listeners
@@ -207,9 +206,45 @@ To accomplish this `matchesListener_` checks if either the listener or its
 `EventEmitter` also provides a similar helper function called `once`, which just
 calls `many` with `1` as the amount, as can be seen [here](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L293).
 
+## Tracking listeners (`onListener`)
+
 ## Facade (`setShouldUseFacade`)
 
-## Tracking listeners (`onListener`)
+By default no information about the event being triggered is passed to the
+listeners. `EventEmitter` can be setup to pass them a facade object with data
+by calling the `setShouldUseFacade` method, like in this
+[fiddle](https://jsfiddle.net/metaljs/uxh9tqfj/).
+
+```js
+const calls = [];
+const listener = (...args) => calls.push(args);
+const emitter = new EventEmitter();
+
+// The emitter will now pass an object to listeners
+// with data about the event, as the last arg.
+emitter.setShouldUseFacade(true);
+
+// Let's subscribe to an event named "myEvent".
+emitter.on('myEvent', listener);
+
+// Same name, triggers the listener.
+emitter.emit('myEvent', 'foo', 'bar');
+
+console.log(calls[0]);
+// ['foo', 'bar', {target: emitter, type: 'myEvent'}]
+```
+
+*[Debug example](../../../playground/examples/EventEmitter/facade.js)*
+
+The `setShouldUseFacade` function itself just
+[stores the value it receives](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L397).
+The important code for this feature lives inside `emit`, when deciding what to
+pass the triggered listeners. The function named `buildFacade_`
+[called by emit](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L147)
+is the one that [creates the object](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L115).
+It's then passed down to `runListeners_`, which [adds it](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L370)
+to the list of arguments that will be given to the listener.
+
 
 ## Default listeners
 
