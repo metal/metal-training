@@ -270,6 +270,46 @@ to the list of arguments that will be given to the listener.
 
 ## Default listeners
 
+Native dom events allow developers to prevent default behaviors related to them,
+via a function named `preventDefault`. Similarly, `EventEmitter` provides a way
+for users to define a default listener, meaning that it will only run after all
+non default listeners, and only if the `preventDefault` function passed to them
+via the facade isn't called (note that `setShouldUseFacade` needs to be set
+to true for this function to be available). Check out this
+[fiddle](https://jsfiddle.net/metaljs/t4934n1f/).
+
+```js
+let str = 'foo';
+const emitter = new EventEmitter();
+emitter.setShouldUseFacade(true);
+
+// Subscribed as "default" listener. Will be called last.
+emitter.on('myEvent', () => str += '-last', true);
+emitter.on('myEvent', () => str += '-first');
+
+emitter.emit('myEvent');
+console.log(str); // 'foo-first-last'
+
+// This new listener will prevent the default listener from running.
+emitter.on('myEvent', (event) => event.preventDefault());
+str = 'foo';
+emitter.emit('myEvent');
+console.log(str); // 'foo-first'
+```
+
+*[Debug example](../../../playground/examples/EventEmitter/default.js)*
+
+When a listener is subscribed as default, this flag will be stored together with
+it in the array of listeners, as you can see [here](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L98).
+
+When an event is emitted, all default listeners are [skipped](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L377)
+until all other listeners finish running. Then, unless `preventDefault` has been
+called, the default handlers [are run too](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L382).
+
+The `preventDefault` function is added to the facade when that's built, and just
+keeps track via a [flag](https://github.com/metal/metal.js/blob/071280367a2c6f98bdafeeb30d151f4b61cb8a5a/packages/metal-events/src/EventEmitter.js#L116)
+of if it's been called.
+
 ## Performance / memory optimizations
 
 ## EventHandle
