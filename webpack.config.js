@@ -9,13 +9,17 @@ module.exports = {
 	  loaders: [
 	    {
 	      test: /\.js?$/,
-				exclude: /node_modules/,
 	      loader: 'babel',
 	      query: {
 	        presets: ['es2015', 'metal-jsx']
 	      }
 	    }
 	  ]
+	},
+	resolve: {
+		// We want webpack to use the ES6 version of metal.js source files, so that
+		// the source maps can work when debugging the playground code. 
+		packageMains: ['jsnext:main', 'main']
 	},
 	devtool: 'source-map'
 };
