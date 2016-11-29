@@ -80,6 +80,18 @@ implementation if no such function is available.
 The other functions using selectors all use `match` internally, like
 `closest` as you can see [here](https://github.com/metal/metal.js/blob/88a5b6779596337ecc26b9615f57b848373e730a/packages/metal-dom/src/domNamed.js#L152).
 
+### Data storage (`domData`)
+
+`domData` was built mostly for internal usage. It provides a simple way to store
+data inside DOM elements without causing conflicts with data that the element
+may already be using. It has only two functions: `get` and `has`. `get` returns
+an object that can receive any data that you like. That object is added to the
+element when `get` is called on it for the [first time](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domData.js#L15).
+
+`get`'s api also allows specifying a [specific property](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domData.js#L24)
+to return from the data object, as well as a [default value](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domData.js#L22)
+to set it to before returning.
+
 ### DOM events (`on`, `once`, `DomEventHandle`)
 
 Through the `on` function from **metal-dom** you can subscribe to DOM events.
@@ -235,11 +247,20 @@ to the event object with the last delegating container that handled it. This way
 we can [detect that](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L761)
 when running a second container.
 
-### Data storage (`domData`)
+### Default listeners
 
-BEFORE DELEGATED EVENTS
+**metal-dom** also allows defining delegate listeners as default, which works
+the same way as we've already seen in
+[EventEmitter](metal-events/EventEmitter.md#default-listeners).
 
-### Default listeners 
+It's enabled
+by passing `true` as the [fifth argument](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L230) of the `delegate` function. When this happens we
+[store a property](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L237)
+in the given listener to indicate that it's special, and so should run last.
+When triggering listeners, `triggerListeners_` [skips](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L801)
+the ones that have this property, collecting them in an array, which gets
+[looped later](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L314)
+in `triggerDefaultDelegatedListeners_` to run all default listeners.
 
 ### Custom events (`registerCustomEvent`)
 
