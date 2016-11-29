@@ -9,6 +9,7 @@
   "evil": false,
   "forin": false,
   "globals": {
+    "alert": true,
     "IncrementalDOM": true,
     "Redux": true,
     "soy": true,

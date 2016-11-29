@@ -51,7 +51,7 @@ via `on`.
 Now whenever that event type is emitted by the origin, `EventEmitterProxy` will
 know that it should emit it at the target as well.
 
-![Subscribing](../../../diagrams/EventEmitterProxy-emitting.png)
+![Emitting](../../../diagrams/EventEmitterProxy-emitting.png)
 
 The listener subscribed by the proxy to the origin emitter is `emitOnTarget_`,
 which just [emits the event on the target](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L98).
