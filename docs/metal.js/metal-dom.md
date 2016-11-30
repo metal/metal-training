@@ -264,10 +264,129 @@ in `triggerDefaultDelegatedListeners_` to run all default listeners.
 
 ### Custom events (`registerCustomEvent`)
 
+**metal-dom** also allows the developer to register custom events based on real
+dom events, like a double click event based on regular clicks. Check out this
+[fiddle](https://jsfiddle.net/metaljs/zynf2y9p/).
+
+```js
+import { on, registerCustomEvent } from 'metal-dom';
+
+let lastClick = {};
+registerCustomEvent('doubleclick', {
+  delegate: true,
+  event: true,
+  handler: (callback, event) => {
+    const time = Date.now();
+    if (lastClick.target === event.target && time - lastClick.time <= 500) {
+      // Same target was clicked twice in a short time, trigger the custom event.
+      lastClick = {};
+      callback(event);
+		} else {
+      lastClick.target = event.target;
+      lastClick.time = time;
+    }
+  },
+  originalEvent: 'click'
+});
+
+const button = document.getElementById('button');
+on(button, 'doubleclick', () => alert('Double clicked'));
+```
+
+The function used to register a new custom event type is `registerCustomEvent`,
+which just stores the new event's configuration in a [map](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L492).
+This config object specifies the original event as well as a handler to
+decide when to trigger the custom event based on the original. **metal-dom**
+automatically registers a few events when included, via the
+[metal-dom/src/events.js](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/events.js#L13)
+file.
+
+Once a custom event is registered, it can be subscribed to via the usual
+`on`, `once` and `delegate` functions. These functions
+[use the event's config](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L447)
+to listen to its original event and wrap the given listener with the custom
+handler.
+
 ### Events simulation (`triggerEvent`)
+
+It's common for developers to need to simulate events in their tests, triggering
+the proper listeners. **metal-dom** has a [function](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L776)
+that helps do this called `triggerEvent`. Note that it's only supposed to be
+used inside tests.
 
 ### Proxy (`DomEventEmitterProxy`)
 
+We've already learned about [EventEmitterProxy](metal-events/EventEmitterProxy)
+when looking at the **metal-events** module. What if instead of proxying events
+from an `EventEmitter` to another, we want to proxy them from a DOM element?
+That's what `DomEventEmitterProxy` is for, as can be seen in this
+[fiddle](https://jsfiddle.net/metaljs/37x9rvt6/).
+
+```js
+import { DomEventEmitterProxy } from 'metal-dom';
+
+const origin = document.getElementById('button');
+const target = new EventEmitter();
+
+// This will proxy all events from the button to the emitter.
+const proxy = new DomEventEmitterProxy(origin, target);
+
+// Listening on the target.
+target.on('click', () => alert('Clicked'));
+```
+
+`DomEventEmitterProxy` extends `EventEmitter` and overrides a few of its
+functions to work for its use case. For example, `shouldProxyEvent_` is
+overwritten to only proxy events that are known dom events, otherwise it doesn't
+make sense to try, as you can see [here](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/DomEventEmitterProxy.js#L66). The other overwritten function is `addListener_`, since it
+needs to use a [different api](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/DomEventEmitterProxy.js#L28)
+for subscribing to dom events.
+
+`DomEventEmitterProxy` also allows proxying delegated events, by accepting
+special event names with the `delegate:` prefix, and then converting it to a
+[delegate call](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/DomEventEmitterProxy.js#L22)
+on **metal-dom**.
+
 ### Feature checks (`features`)
 
+The `features` exported object offers functions to help check for support of
+specific features in the current environment. For example, the
+`checkAttrOrderChange` function detects if the browser may change the order
+of element attributes when rendering html.
+
 ### Script evaluation (`globalEval`, `globalEvalStyles`)
+
+**metal-dom** also offers a way to run js scripts and css styles in the global
+scrope, via the `globalEval` and `globalEvalStyles` objects.
+
+Let's start with `globalEval`. It has four main functions:
+* `run` - Runs the given string with js code. Creates a new **&lt;script&gt;** tag
+with the given js code as its content, and appends it to the document's
+**<head>**. Check the code [here](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/globalEval.js#L17).
+* `runFile` - Runs the js file in the given path. This works almost the same way
+as `run`, by creating a new **&lt;script&gt;** tag with the given src path and
+appending it to the document's **<head>**. The main difference is that since
+the src file may still need to be fetched the function also accepts a callback
+that is run [when the script loads](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/globalEval.js#L44).
+* `runScript` - Runs the given **&lt;script&gt;** tag. The given tag isn't reused,
+since it may have run before (and so wouldn't work anymore). Instead, this
+simply calls either `run` or `runFile` [as appropriate](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/globalEval.js#L76)
+to run the code, creating a new tag.
+* `runScriptsInElement` - Runs all **&lt;script&gt;** tags in the given element. The
+**&lt;script&gt;** tags are found via a `querySelectorAll` [call](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/globalEval.js#L93).
+Since the execution order is important this calls another function named
+[runScriptsInOrder](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/globalEval.js#L110)
+to make sure that is followed correctly. `runScript` runs each tag.
+
+`globalEvalStyles` follows the same pattern, with similar implementation:
+* `run` - Runs the given string with CSS.
+* `runFile` - Runs the CSS file in the given path.
+* `runStyle` - Runs the given **&lt;style&gt;** or **&lt;link&gt;** tag.
+* `runStylesInElement` - Runs all **&lt;style&gt;** and **&lt;link&gt;** tags
+in the given element.
+
+## Next steps
+
+We're done with **metal-dom**, so time to go to **metal-state**.
+
+[↪ Package: metal-state](../metal-state.md)
