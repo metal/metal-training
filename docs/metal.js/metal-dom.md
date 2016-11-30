@@ -389,4 +389,4 @@ in the given element.
 
 We're done with **metal-dom**, so time to go to **metal-state**.
 
-[↪ Package: metal-state](../metal-state.md)
+[↪ Package: metal-state](metal-state.md)
