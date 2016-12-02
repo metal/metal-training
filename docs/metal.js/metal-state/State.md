@@ -32,6 +32,8 @@ state.configState({
 console.log(state.getStateKeys()); // ['foo', 'bar]
 ```
 
+*[Debug example](../../../playground/examples/metal-state/configState.js)*
+
 This example doesn't do much besides show that the keys passed to `configState`
 are successfully returned by `getStateKeys`. This works because `configState`
 [stores](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L255)
@@ -58,6 +60,8 @@ MyClass.STATE = {
 const state = new MyClass();
 console.log(state.getStateKeys()); // ['foo', 'bar]
 ```
+
+*[Debug example](../../../playground/examples/metal-state/STATE.js)*
 
 This is done in the class's [constructor](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L78)
 by `configStateFromStaticHint_`. On the first time that the class is
@@ -150,6 +154,8 @@ const state = new MyClass({
 console.log(state.foo); // 'bar'
 ```
 
+*[Debug example](../../../playground/examples/metal-state/initialValue.js)*
+
 The object with initial values is [stored](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L75)
 in the constructor. One important thing to know about the initial values is that
 they're not set immediately after configuring the properties. `State` only sets
@@ -184,6 +190,8 @@ MyClass.STATE = {
 const state = new MyClass();
 console.log(state.foo); // 'defaultFoo'
 ```
+
+*[Debug example](../../../playground/examples/metal-state/default.js)*
 
 This default value is set during the property's initialization in
 `initStateKey_`. Whenever a value is set for the first time, a key named
@@ -224,16 +232,287 @@ case `callFunction_` runs with the value of `valueFn`.
 
 #### Validator
 
+You can also pass a validator function in the configuration. It will be called
+automatically whenever the property's value is set, and should return a
+boolean indicating if the change should actually be made or not. Check it out
+in this [fiddle](https://jsfiddle.net/metaljs/drug23dd/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+	  validator: val => val > 0
+  }
+};
+
+const state = new MyClass();
+
+state.foo = 1;
+console.log(state.foo); // 1
+
+state.foo = -2;
+console.log(state.foo); // 1
+
+state.foo = 3;
+console.log(state.foo); // 3
+```
+
+*[Debug example](../../../playground/examples/metal-state/validator.js)*
+
+This works because inside `setStateKeyValue_` we first [validate](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L587)
+the new value with `validateKeyValue_` before actually setting it, skipping
+everything when it returns `false`. It's important to now that default values
+are not validated, they're already considered valid as they're part of the
+configuration as well, which is why `validateKeyValue_` skips the check if
+the property is still [being initialized](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L638).`callValidator_` is the one that actually runs the configured
+function via `callFunction_`.
+
+As you can see from the [code](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L189), validators can also return errors instead of a boolean, in which case
+the new value will trigger the error instead of being ignored.
+
+Remember how we said that initial values are set lazily, only after the
+property is accessed for the first time? If they went through this normal flow
+we've just explained, sometimes they'd only get validated a while after being
+passed via the constructor and maybe never at all, so the errors wouldn't be
+triggered at the expected time. To go around this we [manually validate](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L260)
+them inside `configState`.
+
 #### Setter
+
+It's also possible to define a custom setter that can change the received
+value into another before passing it to the property. Check out this
+[fiddle](https://jsfiddle.net/metaljs/tf8z34h1/) example.
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+	  setter: val => val * 2
+  }
+};
+
+const state = new MyClass();
+
+state.foo = 1;
+console.log(state.foo); // 2
+
+state.foo = 2;
+console.log(state.foo); // 4
+```
+
+*[Debug example](../../../playground/examples/metal-state/setter.js)*
+
+After a new value is validated, it goes through the [setter](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L593). As expected, `callFunction_` is also [called](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L168)
+for this.
 
 #### Required
 
+A property can be defined as required, meaning that it will trigger an error
+if set to `null` or `undefined`, like on this
+[fiddle](https://jsfiddle.net/metaljs/hthe6qt6/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+	  required: true
+  }
+};
+
+const state = new MyClass();
+// Error: The property called "foo" is required but didn't receive a value.
+```
+
+*[Debug example](../../../playground/examples/metal-state/required.js)*
+
+After a value is set, the [code](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L594)
+asserts that it's not `null` or `undefined`, logging an [error](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L100)
+when it is.
+
+Again, as initial values are set lazily, this check is done [manually](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L259)
+inside `configState` too.
+
 #### Write once
+
+It's also possible to define that a property can only receive a value once,
+and later behave as read-only, like on this
+[fiddle](https://jsfiddle.net/metaljs/k3yfuv3d/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+	  writeOnce: true
+  }
+};
+
+const state = new MyClass();
+
+state.foo = 1;
+state.foo = 2;
+state.foo = 3;
+console.log(state.foo); // 1
+```
+
+*[Debug example](../../../playground/examples/metal-state/writeOnce.js)*
+
+This is done via another check inside `setStateKeyValue_`, done by the function
+named `canSetState`, as you can see [here](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L586).
+It [uses](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L204)
+the `written` property we've mentioned before to skip new values after the
+first.
 
 ## Change events
 
+Besides configuring properties, `State` also tracks changes to their values,
+and emits events to notify of them (it extends
+[EventEmitter](../metal-events/EventEmitter.md)). This is done with two types of
+events, which will both be explained now.
+
+### Per property change
+
+`State` emits two events immediately after each property's value changes. The
+name of the first is based on the property's name, as in:
+`<propertyName>Changed`. The second has a generic name: `stateKeyChanged`. Both
+provide the exact same payload, containing the key name, its previous value and
+its new one. Check it out in this
+[fiddle](https://jsfiddle.net/metaljs/a3jae2o7/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+  }
+};
+
+const state = new MyClass({
+	foo: 'foo'
+});
+state.on('stateKeyChanged', function(data) {
+  console.log(data); // {key: 'foo', newVal: 'bar', prevVal: 'foo'}
+});
+state.on('fooChanged', function(data) {
+	console.log(data); // {key: 'foo', newVal: 'bar', prevVal: 'foo'}
+});
+state.foo = 'bar';
+```
+
+*[Debug example](../../../playground/examples/metal-state/events.js)*
+
+Every time a new value is set, `setStateKeyValue_` will [call](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L596)
+a function named `informChange_` to trigger change events. `informChange_` will
+then [check](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L613)
+if the value has actually changed (it may have been set to same thing as before
+or have just been set for the first time). If so, it will [trigger both events](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L435).
+
+### Batched
+
+Besides these two immediate events, `State` also triggers another asynchronously
+after changes are made, which batches multiple changes together to be informed
+a single time. Check out this [fiddle](https://jsfiddle.net/metaljs/7qwmxcv4/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo1: {
+  },
+  foo2: {
+  }
+};
+
+const state = new MyClass({
+	foo1: 1,
+	foo2: 2
+});
+state.on('stateChanged', function(data) {
+  console.log(data);
+	// {
+	//   changes: {
+	//     foo1: {key: 'foo1', newVal: 100, prevVal: 1}
+	//     foo2: {key: 'foo1', newVal: 20, prevVal: 2}
+	//   }
+	// }
+});
+
+state.foo1 = 10;
+state.foo2 = 20;
+state.foo1 = 100;
+```
+
+*[Debug example](../../../playground/examples/metal-state/events.js)*
+
+This batch event is prepared inside `informChange_` as well, with a [call](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L437)
+to `scheduleBatchEvent_`. If no batched event is pending yet, one will be
+[scheduled](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L488)
+for the next tick. Otherwise the data for this new change will be [merged](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L496)
+with the current batch data, so that it will be in the next event as well. When
+the time comes, the event is [emitted](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L301)
+and the batched data is reset so that a new event can be scheduled on the next
+change.
+
 ## Properties owner
+
+So far we've always used `State` instances that add properties to themselves.
+It's possible to indicate to `State` that the properties should be added on
+another object though, by passing it as the constructor's second argument,
+as can be seen in this [fiddle](https://jsfiddle.net/metaljs/f6n2u1os/).
+
+```js
+import State from 'metal-state';
+
+class MyClass extends State {
+}
+MyClass.STATE = {
+  foo: {
+  }
+};
+
+const obj = {};
+const state = new MyClass(
+	{
+		foo: 1
+	},
+  obj
+);
+console.log(state.foo, obj.foo); // undefined, 1
+```
+
+*[Debug example](../../../playground/examples/metal-state/owner.js)*
+
+When this second argument is passed in the constructor, it's [stored](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L54)
+by `State` in a variable named `this.obj_`, which defaults to `this`. If you
+look through the code you'll notice that all properties are
+[defined in this variable](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L250),
+including the [reference to the state instance](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L80).
 
 ## Context
 
-## Performance optimizations
+It's also possible to pass `State` a different object called `context` as the
+third argument to the constructor. When given, this context is the one that will
+be used to [emit change events](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L435),
+as well as to [call functions](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L151)
+passed in the configuration object.
+
+## Next steps
+
+Now that we've covered `State`, let's check out `validators`.
+
+[↪ validators](validators.md)

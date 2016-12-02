@@ -153,7 +153,7 @@ const wrapper = document.getElementById('wrapper');
 delegate(wrapper, 'click', '.match', () => alert('Clicked'));
 ```
 
-*[Debug example](../../../playground/examples/metal-dom/delegate.js)*
+*[Debug example](../../playground/examples/metal-dom/delegate.js)*
 
 Let's dive into this function's [code](https://github.com/metal/metal.js/blob/9f21d053063438139b10fa9f9b74537934f170d5/packages/metal-dom/src/domNamed.js#L230)
 to see how this works now. Let's skip the custom event and default listener
@@ -216,6 +216,8 @@ const wrapper = document.getElementById('wrapper');
 // Will only alert when the second child of "wrapper" is clicked.
 delegate(wrapper, 'click', wrapper.childNodes[1], () => alert('Clicked'));
 ```
+
+*[Debug example](../../playground/examples/metal-dom/delegateTarget.js)*
 
 Most of the code that makes this work has already been explained in the previous
 section, as it's almost the same used by the selector delegation. Inside the
