@@ -374,6 +374,38 @@ It [uses](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948
 the `written` property we've mentioned before to skip new values after the
 first.
 
+### Blacklist (`setKeysBlacklist`)
+
+It's possible to indicate to `State` that some property names shouldn't be
+allowed. This is done via the `setKeysBlacklist` function, as in the following
+[fiddle](https://jsfiddle.net/metaljs/tz76ge3u/).
+
+```js
+import State from 'metal-state';
+
+const state = new State();
+state.setKeysBlacklist({
+	bar: true
+});
+
+try {
+  state.configState({
+    foo: {
+    },
+    bar: {
+    }
+  });
+} catch (error) {
+	// Error: It's not allowed to create a state key with the name "bar".
+}
+```
+
+`setKeysBlacklist` expects an object mapping property names to booleans, where
+`true` indicates that the name should not be allowed. Looking at its [code](https://github.com/metal/metal.js/blob/2ad01ab8b6f08fd112fc0dec01374200f82e25aa/packages/metal-state/src/State.js#L559)
+you can see that it just stores this map for later use. It's then used inside
+`configState`, when it [calls](https://github.com/metal/metal.js/blob/2ad01ab8b6f08fd112fc0dec01374200f82e25aa/packages/metal-state/src/State.js#L246)
+`assertValidStateKeyName_` to validate names.
+
 ## Change events
 
 Besides configuring properties, `State` also tracks changes to their values,
