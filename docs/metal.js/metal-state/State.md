@@ -110,7 +110,8 @@ that we'll explain in later sections, it's more complicated than that.
 Properties configured with `State` are defined via `Object.defineProperties`,
 with [a setter and a getter](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L131),
 which are automatically called whenever code like the one above accesses or
-sets their values.
+sets their values. Check out the function's [documentation](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
+if you're curious.
 
 Before we look inside these two we need to take a look at `State`'s constructor
 again. You'll notice that it [defines a property](https://github.com/metal/metal.js/blob/602956442da6887dcfe7e635b98e948a9c6dd058/packages/metal-state/src/State.js#L80)
