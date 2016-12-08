@@ -102,8 +102,6 @@ challenges when building `IncrementalDomRenderer`.
 
 ## IncrementalDomRenderer
 
-## Next steps
+Now let's finally take a look at `IncrementalDomRenderer`.
 
-Next we'll take a look at: **metal-soy**.
-
-[↪ Package: metal-soy](metal-soy.md)
+[↪ IncrementalDomRenderer](./metal-incremental-dom/IncrementalDomRenderer.md)
