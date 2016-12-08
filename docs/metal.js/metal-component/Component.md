@@ -9,6 +9,8 @@ of them: `created`, `attached`, `rendered`, `detached` and `disposed`. Check
 them out in this [fiddle](https://jsfiddle.net/metaljs/ha14u52t/).
 
 ```js
+import Component from 'metal-component';
+
 class MyComponent extends Component {
   /**
    * Called once the component has been created and is ready to be used.
@@ -98,6 +100,8 @@ passed to the component via the constructor, as can be seen in this
 [fiddle](https://jsfiddle.net/metaljs/m77yu296/).
 
 ```js
+import Component from 'metal-component';
+
 const componentElement = document.getElementById('component');
 const component = new Component({
 	element: componentElement
@@ -112,6 +116,8 @@ its value, as can be seen in this
 [fiddle](https://jsfiddle.net/metaljs/drtbb7re/).
 
 ```js
+import Component from 'metal-component';
+
 const component = new Component({
 	element: '#el1'
 });
@@ -120,6 +126,8 @@ console.log(component.element === document.getElementById('el1')); // true
 component.element = '#el2';
 console.log(component.element === document.getElementById('el2')); // true
 ```
+
+*[Debug example](../../playground/examples/metal-component/element.js)*
 
 To make this work we use the [getter](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Functions/get)
 and [setter](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Functions/set)
@@ -153,6 +161,8 @@ empty div will be rendered and set to it, as you can see in this
 [fiddle](https://jsfiddle.net/metaljs/8r631L1n/).
 
 ```js
+import Component from 'metal-component';
+
 const component = new Component();
 console.log(component.element); // <div></div>
 ```
@@ -165,6 +175,8 @@ needed to create a new one first. Check out this
 [fiddle](https://jsfiddle.net/metaljs/yop164h1/).
 
 ```js
+import { Component, ComponentRenderer } from 'metal-component';
+
 class CustomRenderer extends ComponentRenderer.constructor {
 	render(component) {
 		component.element = document.createElement('span');
@@ -180,6 +192,8 @@ MyComponent.RENDERER = new CustomRenderer();
 const component = new MyComponent();
 console.log(component.element); // <span>Custom content</span>
 ```
+
+*[Debug example](../../playground/examples/metal-component/customRenderer.js)*
 
 As you can see we've created a custom renderer by extending from
 `ComponentRenderer`, and overriding its `render` function to do what we want.
@@ -234,6 +248,8 @@ what we've already seen when looking at [State](../metal-state/State.md),
 as can be seen in this [fiddle](https://jsfiddle.net/metaljs/vfx1LpxL/).
 
 ```js
+import Component from 'metal-component';
+
 class MyComponent extends Component {
 }
 MyComponent.STATE = {
@@ -303,6 +319,8 @@ This can receive an object with information about events to be listened on the
 component, as in the following [fiddle](https://jsfiddle.net/metaljs/atyjzqnu/).
 
 ```js
+import Component from 'metal-component';
+
 const component = new Component({
 	events: {
   	event1: function() {
@@ -312,6 +330,8 @@ const component = new Component({
 });
 component.emit('event1'); // 'Event triggered'
 ```
+
+*[Debug example](../../playground/examples/metal-component/events.js)*
 
 In the constructor, components handle this `events` data by calling the
 `addListenersFromObj_` function. Note that the value for `events` is accessed
@@ -336,6 +356,8 @@ It's behavior is automatically handled by `Component`, as you can see in the
 this [fiddle](https://jsfiddle.net/metaljs/d9ge0yL3/).
 
 ```js
+import Component from 'metal-component';
+
 const component = new Component({
 	element: '#element',
 	visible: false
@@ -356,6 +378,8 @@ calls methods with this name format when data changes. Check out this
 [fiddle](https://jsfiddle.net/metaljs/p13djtka/), for example.
 
 ```js
+import Component from 'metal-component';
+
 class MyComponent extends Component {
 	syncFoo(newVal, prevVal) {
   	console.log(newVal, prevVal); // 'newFoo', 'oldFoo'
@@ -393,6 +417,8 @@ since that means that it may have been bound to the current instance, as in
 cases like this:
 
 ```js
+import Component from 'metal-component';
+
 class MyComponent extends Component {
   syncFoo = () => {}
 }
@@ -408,6 +434,8 @@ a component by setting its `SYNC_UPDATES` static property to `true`, as in this
 [fiddle](https://jsfiddle.net/metaljs/g97yc73h/).
 
 ```js
+import { Component, ComponentRenderer } from 'metal-component';
+
 let calledUpdate = false;
 class CustomRenderer extends ComponentRenderer.constructor {
 	update() {
@@ -424,6 +452,8 @@ const component = new MyComponent();
 component.visible = false;
 console.log(calledUpdate); // true
 ```
+
+*[Debug example](../../playground/examples/metal-component/syncUpdates.js)*
 
 `Component`'s constructor [sets this up](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-component/src/Component.js#L127)
 via a call to `setUpSyncUpdates_`. This function does two things:
@@ -449,6 +479,8 @@ changes. This is all done for you by using `on`. Check it out in this
 [fiddle](https://jsfiddle.net/metaljs/0Lstdtk9/).
 
 ```js
+import Component from 'metal-component';
+
 const component = new Component({
 	element: '#button'
 });
