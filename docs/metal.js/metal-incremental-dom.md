@@ -37,9 +37,9 @@ which is the strategy react uses. Both were built to allow quickly updating the
 DOM with new contents, while trying to reuse what's already on the screen as
 much as possible, automatically. So if, for example, the difference from the old
 content and the new content is just an html attribute, these algorithms will
-detect that and just change that, instead of rerendering everything. The main
+detect it and just change that, instead of rerendering everything. The main
 difference between the two is the implementation and the api. We'll see the api
-here, but feel free to check out the implementation if you as well, it's
+here, but feel free to check out the implementation if you wish as well, it's
 [open source](https://github.com/google/incremental-dom)!
 
 Check out this [fiddle](https://jsfiddle.net/metaljs/jewp0tLo/) to use how you
@@ -48,13 +48,13 @@ can render some content using incremental dom.
 ```js
 function render(label) {
   IncrementalDOM.elementOpen('button', null, null, 'type', 'button');
-	IncrementalDOM.text(label);
+  IncrementalDOM.text(label);
   IncrementalDOM.elementClose('button');
 }
 
 // Will render <button type="button">Incremental DOM Button</button>
 IncrementalDOM.patch(
-	container,
+  container,
   () => render('Incremental DOM Button')
 );
 ```
