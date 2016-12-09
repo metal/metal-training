@@ -52,11 +52,12 @@ function render(label) {
   IncrementalDOM.elementClose('button');
 }
 
-// Will render <button type="button">Incremental DOM Button</button>
 IncrementalDOM.patch(
   container,
   () => render('Incremental DOM Button')
 );
+console.log(container.innerHTML);
+// <button type="button">Incremental DOM Button</button>
 ```
 
 As you can see the main idea is that you need to call this `patch` function
@@ -72,12 +73,33 @@ used to help incremental dom reuse the right elements, particularly when
 rendering an array of items, as explained [here](http://google.github.io/incremental-dom/#conditional-rendering/array-of-items).
 
 The third argument is an array of key/value pairs for attributes, in the same
-format as the ones passed later, but that are known to be static, so that
-incremental dom can skip updating them later, and only use them when creating
-new elements.The attributes passed after the fourth parameter are always
-compared and updated when changed. In other words, this statics array is just
-an optimization, and should only be used when the developer is sure of what
-he's doing.
+format as the ones passed later. Incremental dom will assume that these are
+static though, meaning that they can be ignored when reusing elements, and only
+considered when creating new elements from scratch. The attributes passed after
+the fourth parameter, on the other hand, are always compared and updated when
+changed. In other words, this statics array is just an optimization, and should
+only be used when the developer is sure of what he's doing.
+
+Besides `patch`, incremental dom provides a similar function called
+`patchOuter`. It works almost exactly the same, the only difference being that
+instead of adding the rendered contents to the given element, it assumes that
+this element is also rendered by the specified function, like in this
+[fiddle](https://jsfiddle.net/metaljs/5j2xhLLL/).
+
+```js
+function render(label) {
+  IncrementalDOM.elementOpen('button', null, null, 'type', 'button');
+  IncrementalDOM.text(label);
+  IncrementalDOM.elementClose('button');
+}
+
+IncrementalDOM.patchOuter(
+  element,
+  () => render('Incremental DOM Button')
+);
+console.log(element.outerHTML);
+// <button type="button">Incremental DOM Button</button>
+```
 
 We'll show some more incremental dom functions as we dive into
 `IncrementalDomRenderer`'s code, but this should be enough for now.
@@ -95,10 +117,10 @@ element to be created, and the actual operation is only done afterwards, when
 an object like this is passed to `ReactDOM.render`. Incremental DOM works very
 differently, as it doesn't build these intermediary objects, but instead does
 the rendering operation as soon as the functions run. It also currently has no
-concept of components, it can only handle rendering real html elements. We need
-our renderer to allow using component classes as tags on their templates though,
-like in jsx: `<Modal title="My Modal Title" />`. These things were the main
-challenges when building `IncrementalDomRenderer`.
+concept of components, it can only handle rendering actual html elements. We
+need our renderer to allow using component classes as tags on their templates
+though, like in jsx: `<Modal title="My Modal Title" />`. These things were the
+main challenges when building `IncrementalDomRenderer`.
 
 ## IncrementalDomRenderer
 
