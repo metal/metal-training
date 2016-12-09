@@ -333,15 +333,15 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 const fnListener = () => alert('Clicked Button 1');
 
 class MyComponent extends Component {
-	handleClick() {
-  	alert('Clicked Button 2');
+  handleClick() {
+    alert('Clicked Button 2');
   }
 
-	render() {
-	  IncrementalDOM.elementOpen('div')
+  render() {
+    IncrementalDOM.elementOpen('div');
 
     // Using `on[EventName]` format, with a function reference.
-		IncrementalDOM.elementOpen('button', null, null, 'onClick', fnListener);
+    IncrementalDOM.elementOpen('button', null, null, 'onClick', fnListener);
     IncrementalDOM.text('Button 1');
     IncrementalDOM.elementClose('button');
 
@@ -350,13 +350,15 @@ class MyComponent extends Component {
     IncrementalDOM.text('Button 2');
     IncrementalDOM.elementClose('button');
 
-		IncrementalDOM.elementClose('div')
-	}
+    IncrementalDOM.elementClose('div');
+  }
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
 
 new MyComponent();
 ```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/listeners.js)*
 
 As you can see there are two different supported formats for event listener
 attributes: **on[EventName]** and **data-on[eventname]**. Both work the same way,
@@ -371,18 +373,356 @@ Let's see how they work now. For that we'll go back to the `startInterception`
 where we request that `IncrementalDOM.attributes` is hijacked by
 `handleInterceptedAttributesCall_`. As was mentioned before, this function is
 used by incremental dom to apply an element's attribute when its value changes.
+In the end it only calls another function called `applyAttribute`, passing it
+the current component plus all args it received.
+
+[Inside `applyAttribute`](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/attributes.js#L18),
+the first thing that is done is a call to `getEventFromListenerAttr_`. This
+function runs the attribute's name through a regex, returning the event name
+it references, or `null` if it's not an event listener attribute. If it is
+though, `applyAttribute` will then [call](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/attributes.js#L21) `attachEvent_`, which does the actual subscription.
+
+First, `attachEvent_` checks if the given element already has a handle for the
+specified event name. If so, that handle is detached, as it won't be used
+anymore. Then, if no listener function is given, the attribute is
+[removed](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/attributes.js#L78)
+from the element, as expected. Otherwise, the attribute is set if in the format
+**data-on[eventname]** (as has already been explained), the listener is
+converted to a function if given as a name, and finally attached via a
+`delegate` call. Note that all inline listeners will be attached using
+`delegate`, with `document` as the container. That's better for performance
+than attaching new listeners for each element, so this is already handled
+automatically for the developer.
+
+Although it initially feels like this covers everything, there's still one edge
+case missing. As was said, incremental dom's `attributes` function is only
+called when it detects that the element's attribute value has changed. What
+happens if a page that was previously rendered by the server is later rendered
+via a Metal.js component? Check out this
+[fiddle](https://jsfiddle.net/metaljs/h1fsz52t/) for example.
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class MyComponent extends Component {
+	handleClick() {
+  	alert('Clicked Button');
+  }
+
+	render() {
+    IncrementalDOM.elementOpen('button', null, null, 'data-onclick', 'handleClick');
+    IncrementalDOM.text('Button');
+    IncrementalDOM.elementClose('button');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const element = document.createElement('button');
+element.setAttribute('data-onclick', 'handleClick');
+new MyComponent({element});
+```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/listenersDecorated.js)*
+
+On this first render, the component will reuse all the
+contents thanks to incremental dom, but if these contents already had attributes
+in the **data-on[eventname]** format set, like in the example above, then their
+values won't change, meaning that `attributes` won't be called at all. Unless
+we handle this case separately, these events won't ever be subscribed to.
+
+That's why inside `handleRegularCall_` there's also a [call](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L286)
+to a function named `attachDecoratedListeners_`. This function only ever does
+anything for a component [on its first render](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L47), in which case it loops through all attributes calling
+`attachFromAttrFirstTime`. This [last function](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/attributes.js#L43)
+does almost exactly the same as `applyAttribute`, calling first
+`getEventFromListenerAttr_` to get the event name, and then `attachEvent_` to
+subscribe to it. The only difference here is that it will only subscribe it if
+it hasn't already done so before. This is what fixes the hybrid rendering case.
 
 ## Element classes
 
+We've already talked about the `elementClasses` property
+[before](../metal-component/Component.md#elementclasses), which is defined
+for all components by `Component` itself. It doesn't really do anything by
+default when using the base `ComponentRenderer`, but `IncrementalDomRenderer`
+makes sure that the value passed to `elementClasses` is set as the component
+element's class, as can be seen in this
+[fiddle](https://jsfiddle.net/metaljs/hqwpcefb/).
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class MyComponent extends Component {
+  render() {
+    IncrementalDOM.elementVoid('div');
+  }
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const component = new MyComponent({elementClasses: 'myClass'});
+console.log(component.element);
+// <div class="myClass"></div>
+```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/elementClasses.js)*
+
+For this to work we need to change the attributes incremental dom receives on
+the call to build the component's root element. That's yet another use case for
+`handleRegularCall_`. Looking at the [code](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L277)
+you can see that this is done before the original incremental dom is called,
+so that we have time to change its arguments first. Since `elementClasses` is
+only supposed to be passed to the root element, we again check that now familiar
+`rootElementReached` flag to detect it. Then we get the value of `elementClasses`
+from the data manager, and [pass it](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L280)
+to `addElementClasses_`.
+
+Now `addElementClasses_` needs to pass `elementClasses` together with the other
+attributes that incremental dom received from the `elementOpen` call. There are
+two cases to be handled here:
+
+1. If no `class` attribute was passed, we just need to pass it now.
+2. If a `class` attribute was already being passed, we need to merge
+`elementClasses` with it, removing any possible duplicates.
+
+That's exactly [what `addElementClasses_` does](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L26).
+The only thing a bit weird is how. It receives all the arguments passed to
+`elementOpen` as an array but, as you've probably already noticed, they're hard
+to handle, since there may be attributes in the statics array passed as the
+third parameter, or in any of the other parameters passed afterwards. To
+simplify this, the function calls `buildConfigFromCall`, which simply turns the
+arguments array [into an object](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/callArgs.js#L9). Once `elementClasses` is added to it, it's converted
+[back to an array](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/callArgs.js#L27)
+via `buildCallFromConfig`.
+
+## Updates
+
+We've already seen that `Component` tracks changes to its data, calling the
+renderer's `update` function when they're detected. Let's see how this works
+when using `IncrementalDomRenderer`. Check out this
+[fiddle](https://jsfiddle.net/metaljs/48759mzf/).
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class MyComponent extends Component {
+	render() {
+    IncrementalDOM.elementOpen('div');
+    IncrementalDOM.text(this.foo);
+    IncrementalDOM.elementClose('div');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+MyComponent.STATE = {
+	foo: {
+  	value: 'foo'
+  }
+};
+
+const component = new MyComponent();
+console.log(component.element); // <div>foo</div>
+
+component.foo = 'bar';
+component.once('stateSynced', function() {
+	console.log(component.element); // <div>bar</div>
+});
+```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/updates.js)*
+
+Instead of going straight to the renderer's `update` method, let's first take
+a look at its [`setUp`](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L172).
+If you remember, this function is called by `Component` in its constructor, to
+allow the renderer to do any preparations it needs. As you can see it does a few
+minor things, but at the end it also [runs](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L179)
+a function called `trackChanges`. The only thing this does is to listen to the
+[synchronous change event](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/changes.js#L42)
+from `State`, storing the data about each change in the renderer's data.
+
+But why would we need that at all when `Component` tracks changes and calls the
+renderer at the appropriate time? Again this is necessary because of sub
+components, which may receive new data from parent components during render.
+In these cases the sub component is rendered by the parent right after receiving
+the new data though, so it doesn't make sense to update them once the batch
+event is triggered later. Tracking these changes here prevents this problem,
+as they're [cleared](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L373)
+again whenever the component is rendered, and we'll see that even when `update`
+is called, it will only run if this changes object has content.
+
+Now we can look at `update`. It first [checks](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L211)
+if the update should happen and, if so, calls the same `patch` function as
+`render` does. [Inside `shouldUpdate`](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L188),
+`false` is returned if the changes object is `null`.
+
+If that passes there's still [another check](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L192)
+though. If the component has a `shouldUpdate` function, it will be called with
+the current changes. This allows components to optimize their own render
+operation manually, if they wish to. Its return value will determine if the
+update happens or not. When it doesn't exist, the return value will be `true`.
+
 ## Sub components
+
+Now it's time to start talking properly about sub components. This is a big
+feature, so we'll split this into many sub topics.
+
+### Render by class reference
+
+Let's start by the most common use case: rendering a sub component by passing
+a reference to its class to an incremental dom call. Check out this
+[fiddle](https://jsfiddle.net/metaljs/dvmpwtk9/) example.
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class ChildComponent extends Component {
+	render() {
+		IncrementalDOM.elementOpen('span');
+    IncrementalDOM.text('Child');
+		IncrementalDOM.elementClose('span');
+	}
+}
+ChildComponent.RENDERER = IncrementalDomRenderer;
+
+class MyComponent extends Component {
+	render() {
+    IncrementalDOM.elementOpen('div');
+    IncrementalDOM.elementVoid(ChildComponent);
+    IncrementalDOM.elementClose('div');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const component = new MyComponent();
+console.log(component.element);
+// <div><span>Child</span></div>
+```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/nested.js)*
+
+As you already know, the main interceptor function is
+`handleInterceptedOpenCall_`, so let's start there. The only thing it does is
+to separate sub component calls from regular html element calls, handling each
+with a different function. This [check](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L249)
+is done via `isComponentTag_`, which [accepts](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L318)
+all tags that are functions (which includes classes), as well as strings that
+start with an uppercase letter. We'll assume the first case for now, which is
+the one used by the example above.
+
+Since the tag is a function, `handleSubComponentCall_` will handle it. Before
+doing anything to the sub component at all, this first start capturing
+incremental dom calls for children elements being passed to it. We'll see this
+in more detail [later](#children) but, for now, let's ignore this since the
+example we're analysing doesn't pass any children to the sub component anyway.
+
+All you need to know for now is that the function passed to `captureChildren`,
+called `handleChildrenCaptured_`, will be called automatically when children
+are ready, so let's jump directly to it. Inside it we'll again ignore the part
+about children and note that it [calls](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L211)
+`renderFromTag_`, which in turn [calls](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L436)
+`renderSubComponent_` since the tag is a component class. That's the main
+function we want to analyse at this time.
+
+`renderSubComponent_` will first get the component instance for the given class
+[via `getSubComponent_`](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L487). We won't go inside that just yet, just
+know for now that it'll decide if a new instance should be created for this, or
+if it can reuse another instance that was created before. With the component
+instance ready, its renderer's `renderInsidePatch` function will be
+[called](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L503).
+
+Instead of running another `patch`, this function skips that part and
+[calls `render` directly](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L162),
+since it knows that a patch is already on course.  If this is not the sub
+component's first render and `shouldUpdate` returns `false`, the rendering will
+be [skipped](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L164)
+altogether, with the help of another incremental dom function called
+[`skipNode`](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L202).
+
+### Render by class name
+
+It's also possible to render a sub component by passing its class name to an
+incremental dom call. Check out this
+[fiddle](https://jsfiddle.net/metaljs/gsmek5bs/) example.
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class ChildComponent extends Component {
+	render() {
+		IncrementalDOM.elementOpen('span');
+    IncrementalDOM.text('Child');
+		IncrementalDOM.elementClose('span');
+	}
+}
+ChildComponent.RENDERER = IncrementalDomRenderer;
+
+// Calling this is required for the component to be referenced by
+// its class name in incremental dom calls.
+ComponentRegistry.register(ChildComponent);
+
+class MyComponent extends Component {
+	render() {
+    IncrementalDOM.elementOpen('div');
+    IncrementalDOM.elementVoid('ChildComponent');
+    IncrementalDOM.elementClose('div');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const component = new MyComponent();
+console.log(component.element);
+// <div><span>Child</span></div>
+```
+
+Note that calling `ComponentRegistry.register` is required in this case. As
+we've already seen, this call will store a mapping between the class name and
+its reference, which can be retrieved later via
+`ComponentRegistry.getConstructor`. That's how `IncrementalDomRenderer` manages
+to support this use case. Taking a [quick look](https://github.com/metal/metal.js/blob/0ed1d8adc9086870e2b1b86d79b36d77cd3c40a8/packages/metal-incremental-dom/src/render/render.js#L178)
+at `getSubComponent_` you'll see that the first thing it does is to convert
+the given string tag to a class constructor when necessary.
+
+### Refs
+
+### Sharing root element between components
+
+It's possible to share the same root element between a parent and its sub
+component, as can be seen in this
+[fiddle](https://jsfiddle.net/metaljs/jxpeydz8/).
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class ChildComponent extends Component {
+	render() {
+		IncrementalDOM.elementOpen('span');
+    IncrementalDOM.text('Child');
+		IncrementalDOM.elementClose('span');
+	}
+}
+ChildComponent.RENDERER = IncrementalDomRenderer;
+
+class MyComponent extends Component {
+	render() {
+    IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const component = new MyComponent();
+console.log(component.element) // <span>Child</span>
+console.log(component.element === component.refs.child.element); // true
+```
 
 ### Reusage strategy
 
 ### Children
 
 ### Automatic cleanup of unused sub components
-
-## Updates
 
 ## Next steps
 

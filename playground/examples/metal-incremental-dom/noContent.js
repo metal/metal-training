@@ -6,11 +6,11 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 class MyComponent extends Component {
 	render() {
   	// Renders nothing, so the root element should be null or undefined.
+  	debugger;
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
 
-debugger;
 const component = new MyComponent({
 	element: document.createElement('div')
 });

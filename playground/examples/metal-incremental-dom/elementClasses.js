@@ -5,13 +5,11 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
 		debugger;
-    IncrementalDOM.elementVoid('span', null, null, 'ref', 'inner');
-    IncrementalDOM.elementClose('div');
+		IncrementalDOM.elementVoid('div');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
 
-const component = new MyComponent();
-console.log(component.refs.inner);
+const component = new MyComponent({elementClasses: 'myClass'});
+console.log(component.element);
