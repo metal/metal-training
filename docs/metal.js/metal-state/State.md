@@ -184,7 +184,7 @@ class MyClass extends State {
 }
 MyClass.STATE = {
   foo: {
-	  value: 'defaultFoo'
+    value: 'defaultFoo'
   }
 };
 
@@ -213,14 +213,14 @@ import State from 'metal-state';
 class MyClass extends State {
   myFn() {
     return 'fromFnName';
-	}
+  }
 }
 MyClass.STATE = {
   foo: {
-	  valueFn: 'myFn'
+    valueFn: 'myFn'
   },
   bar: {
-	  valueFn: () => 'fromFn'
+    valueFn: () => 'fromFn'
   }
 };
 
@@ -245,7 +245,7 @@ class MyClass extends State {
 }
 MyClass.STATE = {
   foo: {
-	  validator: val => val > 0
+    validator: val => val > 0
   }
 };
 
@@ -294,7 +294,7 @@ class MyClass extends State {
 }
 MyClass.STATE = {
   foo: {
-	  setter: val => val * 2
+    setter: val => val * 2
   }
 };
 
@@ -325,7 +325,7 @@ class MyClass extends State {
 }
 MyClass.STATE = {
   foo: {
-	  required: true
+    required: true
   }
 };
 
@@ -355,7 +355,7 @@ class MyClass extends State {
 }
 MyClass.STATE = {
   foo: {
-	  writeOnce: true
+    writeOnce: true
   }
 };
 
@@ -434,13 +434,13 @@ MyClass.STATE = {
 };
 
 const state = new MyClass({
-	foo: 'foo'
+  foo: 'foo'
 });
 state.on('stateKeyChanged', function(data) {
   console.log(data); // {key: 'foo', newVal: 'bar', prevVal: 'foo'}
 });
 state.on('fooChanged', function(data) {
-	console.log(data); // {key: 'foo', newVal: 'bar', prevVal: 'foo'}
+  console.log(data); // {key: 'foo', newVal: 'bar', prevVal: 'foo'}
 });
 state.foo = 'bar';
 ```
@@ -520,9 +520,9 @@ MyClass.STATE = {
 
 const obj = {};
 const state = new MyClass(
-	{
-		foo: 1
-	},
+  {
+    foo: 1
+  },
   obj
 );
 console.log(state.foo, obj.foo); // undefined, 1

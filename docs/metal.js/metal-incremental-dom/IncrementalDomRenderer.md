@@ -20,9 +20,9 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-    IncrementalDOM.text('My Component');
-    IncrementalDOM.elementClose('div');
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.text('My Component');
+		IncrementalDOM.elementClose('div');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
@@ -251,7 +251,7 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	render() {
-  	// Renders nothing, so the root element should be null or undefined.
+		// Renders nothing, so the root element should be null or undefined.
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
@@ -287,9 +287,9 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-    IncrementalDOM.elementVoid('span', null, null, 'ref', 'inner');
-    IncrementalDOM.elementClose('div');
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.elementVoid('span', null, null, 'ref', 'inner');
+		IncrementalDOM.elementClose('div');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
@@ -409,13 +409,13 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	handleClick() {
-  	alert('Clicked Button');
-  }
+		alert('Clicked Button');
+	}
 
 	render() {
-    IncrementalDOM.elementOpen('button', null, null, 'data-onclick', 'handleClick');
-    IncrementalDOM.text('Button');
-    IncrementalDOM.elementClose('button');
+		IncrementalDOM.elementOpen('button', null, null, 'data-onclick', 'handleClick');
+		IncrementalDOM.text('Button');
+		IncrementalDOM.elementClose('button');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
@@ -511,16 +511,16 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 
 class MyComponent extends Component {
 	render() {
-    IncrementalDOM.elementOpen('div');
-    IncrementalDOM.text(this.foo);
-    IncrementalDOM.elementClose('div');
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.text(this.foo);
+		IncrementalDOM.elementClose('div');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
 MyComponent.STATE = {
 	foo: {
-  	value: 'foo'
-  }
+		value: 'foo'
+	}
 };
 
 const component = new MyComponent();
@@ -810,16 +810,16 @@ ChildComponent.RENDERER = IncrementalDomRenderer;
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-    IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
 		IncrementalDOM.elementClose('div');
 	}
 }
 MyComponent.RENDERER = IncrementalDomRenderer;
 MyComponent.STATE = {
 	foo: {
-  	value: 'foo'
-  }
+		value: 'foo'
+	}
 };
 
 const component = new MyComponent();
@@ -827,7 +827,7 @@ const child = component.refs.child;
 
 component.foo = 'bar';
 component.once('stateSynced', function() {
-  console.log(child === component.refs.child); // true
+	console.log(child === component.refs.child); // true
 });
 ```
 
@@ -895,18 +895,18 @@ import IncrementalDomRenderer from 'metal-incremental-dom';
 class ChildComponent extends Component {
 	render() {
 		IncrementalDOM.elementOpen('span');
-    this.children.forEach(IncrementalDomRenderer.renderChild);
-    IncrementalDOM.elementClose('span');
+		this.children.forEach(IncrementalDomRenderer.renderChild);
+		IncrementalDOM.elementClose('span');
 	}
 }
 ChildComponent.RENDERER = IncrementalDomRenderer;
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-    IncrementalDOM.elementOpen(ChildComponent);
-    IncrementalDOM.text('Text from parent');
-    IncrementalDOM.elementClose(ChildComponent);
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.elementOpen(ChildComponent);
+		IncrementalDOM.text('Text from parent');
+		IncrementalDOM.elementClose(ChildComponent);
 		IncrementalDOM.elementClose('div');
 	}
 }
@@ -1006,9 +1006,9 @@ ChildComponent.RENDERER = IncrementalDomRenderer;
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-    if (!this.removeChild) {
-	    IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
+		IncrementalDOM.elementOpen('div');
+		if (!this.removeChild) {
+			IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
 		}
 		IncrementalDOM.elementClose('div');
 	}
@@ -1024,7 +1024,7 @@ const child = component.refs.child;
 component.removeChild = true;
 component.once('stateSynced', function() {
 	console.log(child.isDisposed()); // true
-  console.log(component.refs.child); // undefined
+	console.log(component.refs.child); // undefined
 });
 ```
 
@@ -1054,15 +1054,15 @@ import Component from 'metal-component';
 import IncrementalDomRenderer from 'metal-incremental-dom';
 
 function myFn({content}) {
-  IncrementalDOM.elementOpen('span');
-  IncrementalDOM.text(content);
-  IncrementalDOM.elementClose('span');
+	IncrementalDOM.elementOpen('span');
+	IncrementalDOM.text(content);
+	IncrementalDOM.elementClose('span');
 }
 
 class MyComponent extends Component {
 	render() {
-  	IncrementalDOM.elementOpen('div');
-	   IncrementalDOM.elementVoid(myFn, null, null, 'content', 'Function content');
+		IncrementalDOM.elementOpen('div');
+		IncrementalDOM.elementVoid(myFn, null, null, 'content', 'Function content');
 		IncrementalDOM.elementClose('div');
 	}
 }

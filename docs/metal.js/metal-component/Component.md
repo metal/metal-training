@@ -13,40 +13,40 @@ import Component from 'metal-component';
 
 class MyComponent extends Component {
   /**
-   * Called once the component has been created and is ready to be used.
-   */
-	created() {
-  	console.log('created ');
-	}
-
-  /**
-   * Called when the component has been rendered.
-   * @param {boolean} firstRender True on the first render, false otherwise.
-   */
-  rendered() {
-  	console.log('rendered ');
+  * Called once the component has been created and is ready to be used.
+  */
+  created() {
+    console.log('created ');
   }
 
   /**
-   * Called when the component has been added to the DOM.
-   */
+  * Called when the component has been rendered.
+  * @param {boolean} firstRender True on the first render, false otherwise.
+  */
+  rendered() {
+    console.log('rendered ');
+  }
+
+  /**
+  * Called when the component has been added to the DOM.
+  */
   attached() {
-  	console.log('attached ');
-	}
+    console.log('attached ');
+  }
 
   /**
-   * Called when the component has been removed from the DOM.
-   */
+  * Called when the component has been removed from the DOM.
+  */
   detached() {
-  	console.log('detached ');
-	}
+    console.log('detached ');
+  }
 
   /**
-   * Called when the component has been destroyed.
-   */
+  * Called when the component has been destroyed.
+  */
   disposed() {
-  	console.log('disposed');
-	}
+    console.log('disposed');
+  }
 }
 
 const component = new MyComponent();
@@ -103,7 +103,7 @@ import Component from 'metal-component';
 
 const componentElement = document.getElementById('component');
 const component = new Component({
-	element: componentElement
+  element: componentElement
 });
 console.log(component.element === componentElement); // true
 ```
@@ -118,7 +118,7 @@ its value, as can be seen in this
 import Component from 'metal-component';
 
 const component = new Component({
-	element: '#el1'
+  element: '#el1'
 });
 console.log(component.element === document.getElementById('el1')); // true
 
@@ -177,8 +177,8 @@ needed to create a new one first. Check out this
 import { Component, ComponentRenderer } from 'metal-component';
 
 class CustomRenderer extends ComponentRenderer.constructor {
-	render(component) {
-		component.element = document.createElement('span');
+  render(component) {
+    component.element = document.createElement('span');
     component.element.textContent = 'Custom content';
     component.informRendered();
   }
@@ -258,7 +258,7 @@ MyComponent.STATE = {
 };
 
 const component = new MyComponent({
-	foo: 'foo'
+  foo: 'foo'
 });
 console.log(component.foo); // 'foobar'
 ```
@@ -332,7 +332,7 @@ import Component from 'metal-component';
 const component = new Component({
 	events: {
   	event1: function() {
-			console.log('Event triggered');    
+      console.log('Event triggered');    
     }
   }
 });
@@ -367,8 +367,8 @@ this [fiddle](https://jsfiddle.net/metaljs/d9ge0yL3/).
 import Component from 'metal-component';
 
 const component = new Component({
-	element: '#element',
-	visible: false
+  element: '#element',
+  visible: false
 });
 console.log(component.element.style.display); // 'none'
 ```
@@ -389,13 +389,13 @@ calls methods with this name format when data changes. Check out this
 import Component from 'metal-component';
 
 class MyComponent extends Component {
-	syncFoo(newVal, prevVal) {
-  	console.log(newVal, prevVal); // 'newFoo', 'oldFoo'
-	}
+  syncFoo(newVal, prevVal) {
+    console.log(newVal, prevVal); // 'newFoo', 'oldFoo'
+  }
 }
 MyComponent.STATE = {
-	foo: {
-  	value: 'oldFoo'
+  foo: {
+    value: 'oldFoo'
   }
 };
 
@@ -446,9 +446,9 @@ import { Component, ComponentRenderer } from 'metal-component';
 
 let calledUpdate = false;
 class CustomRenderer extends ComponentRenderer.constructor {
-	update() {
-  	calledUpdate = true;
-	}
+  update() {
+    calledUpdate = true;
+  }
 }
 
 class MyComponent extends Component {
@@ -490,7 +490,7 @@ changes. This is all done for you by using `on`. Check it out in this
 import Component from 'metal-component';
 
 const component = new Component({
-	element: '#button'
+  element: '#button'
 });
 component.on('click', () => alert('Clicked!'));
 ```

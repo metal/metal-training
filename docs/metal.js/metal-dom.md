@@ -283,7 +283,7 @@ registerCustomEvent('doubleclick', {
       // Same target was clicked twice in a short time, trigger the custom event.
       lastClick = {};
       callback(event);
-		} else {
+    } else {
       lastClick.target = event.target;
       lastClick.time = time;
     }
