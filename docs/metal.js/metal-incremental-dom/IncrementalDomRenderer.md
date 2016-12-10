@@ -201,6 +201,8 @@ at it shows that it just checks if the tag is for a component or not, calling
 different functions for each case, either `handleSubComponentCall_` or
 `handleRegularCall_`. We'll see more about these in the following sections.
 
+![Interception](../../../diagrams/Interception.png)
+
 Just to wrap it up, inside `cleanUpRender_`, the `stopInterception` [call](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L71)
 is done.
 
@@ -915,6 +917,8 @@ console.log(component.element);
 // <div><span>Text from parent</span></div>
 ```
 
+*[Debug example](../../playground/examples/metal-incremental-dom/children.js)*
+
 As you can see, sub components receive any children content in a property called
 `children`. If you inspect this property you'll see that it's an array of
 objects, each representing a child node that was passed down. Clearly, this
@@ -955,9 +959,126 @@ the `children` property in the sub component's data to the captured calls.
 
 #### Rendering children
 
+Now let's see how the `renderChild` method from `IncrementalDomRenderer` works.
+It just [calls](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L135)
+another function called `renderChild`, which in turn calls `renderChildTree`,
+passing it the child object and `handleChildRender_` as a callback function.
+
+`renderChildTree` is the one that does most of the work. If it detects that
+it's been called during children capture, it ignores trying to render anything
+and just [adds](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/children/children.js#L68)
+the object as it is to the captured data. In the usual case it will actually
+render the child, calling the appropriate incremental dom functions for them,
+which are already being intercepted by `IncrementalDomRenderer` as usual.
+Instead of just passing each child's tag to `elementOpen` though, it passes an
+object indicating both the tag and the child's owner. That's important so that
+the interceptor function, `handleRegularCall_`, can know who the child's owner
+is when storing refs. Children of the given child object are rendered
+[recursively](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/children/children.js#L89)
+by `renderChildTree` as well.
+
+Before actually rendering anything, `renderChildTree` first calls the function
+given as the second param, and ignores the child if this function returns `true`.
+As we've already seen, this function is `handleChildRender_`, which handles
+sub components passed as children, so that they don't need to recapture any
+children of their own through interception again. It uses the `children` already
+captured in the child object and [calls](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L225)
+`renderFromTag_`, passing it the child's owner component, which will then be
+used instead of the currently rendering component for storing refs.
+
 ### Automatic cleanup of unused sub components
 
-## Function components
+Sometimes, for various reasons, sub components won't be reused when a parent is
+updated. In these cases, `IncrementalDomRenderer` takes care of disposing these
+now unused instances automatically for the developer. Check it out in this
+[fiddle](https://jsfiddle.net/metaljs/ydq1pxpu/).
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+class ChildComponent extends Component {
+	render() {
+		IncrementalDOM.elementVoid('span');
+	}
+}
+ChildComponent.RENDERER = IncrementalDomRenderer;
+
+class MyComponent extends Component {
+	render() {
+  	IncrementalDOM.elementOpen('div');
+    if (!this.removeChild) {
+	    IncrementalDOM.elementVoid(ChildComponent, null, null, 'ref', 'child');
+		}
+		IncrementalDOM.elementClose('div');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+MyComponent.STATE = {
+	removeChild: {}
+};
+
+const component = new MyComponent();
+const child = component.refs.child;
+
+component.removeChild = true;
+component.once('stateSynced', function() {
+	console.log(child.isDisposed()); // true
+  console.log(component.refs.child); // undefined
+});
+```
+
+This automatic disposal is done by keeping track of all the children of each
+component. Every time a new component is rendered, it's [added](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L495)
+to its parent list of children inside `renderSubComponent_`. Right before the
+render operation, in `prepareRender_`, this list is reset, and the previous
+list of components are [scheduled](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L375)
+for a possible future disposal, which happens when the
+[last component being rendered is done](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L86).
+
+Let's first look at this `schedule` function. It just loops through the given
+list, [clearing the parent](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/cleanup/unused.js#L39)
+of each given component and adding them to a queue. When a component is rendered,
+its parent is [set](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L491)
+to a new value. So, when `disposeUnused` is called after all components finish
+rendering, all scheduled components that still don't have a parent are [disposed](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/cleanup/unused.js#L24).
+
+## Componentless functions
+
+Besides component classes, `IncrementalDomRenderer` also allows passing simple
+functions as tags to incremental dom calls, as in this
+[fiddle](https://jsfiddle.net/metaljs/qx1g3zya/).
+
+```js
+import Component from 'metal-component';
+import IncrementalDomRenderer from 'metal-incremental-dom';
+
+function myFn({content}) {
+  IncrementalDOM.elementOpen('span');
+  IncrementalDOM.text(content);
+  IncrementalDOM.elementClose('span');
+}
+
+class MyComponent extends Component {
+	render() {
+  	IncrementalDOM.elementOpen('div');
+	   IncrementalDOM.elementVoid(myFn, null, null, 'content', 'Function content');
+		IncrementalDOM.elementClose('div');
+	}
+}
+MyComponent.RENDERER = IncrementalDomRenderer;
+
+const component = new MyComponent();
+console.log(component.element);
+// <div><span>Function content</span></div>
+```
+
+*[Debug example](../../playground/examples/metal-incremental-dom/functionTags.js)*
+
+This is pretty straightforward to explain. Instead of trying to render a
+component, when `renderFromTag_` detects that the given tag is a function it
+just [calls it](https://github.com/metal/metal.js/blob/68005b320d1b8979f910ddae0baaf63b160e7a06/packages/metal-incremental-dom/src/render/render.js#L437),
+passing it an object with the attributes data.
 
 ## Next steps
 
