@@ -14,7 +14,7 @@ To use it, first install **metal-events** through npm, like this:
 Then you'll be able to import its contents in your ES6 modules. For example:
 
 ```js
-import { EventEmitter } from 'metal';
+import { EventEmitter } from 'metal-events';
 ```
 
 ## Exported values
