@@ -200,7 +200,8 @@ string property though, this string will first be [converted to incremental dom 
 before being added to the template's data object. This is important because
 otherwise the template won't know how to render that html. The html is converted
 via a function called `toIncDom`, which [delegates](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-soy/src/Soy.js#L207)
-the job to an external module called `html2incdom`.
+the job to an external module called
+[`html2incdom`](https://www.npmjs.com/package/html2incdom).
 
 After all state properties have already been added to the data object,
 `buildTemplateData_` will go through the list of params that the component's
@@ -218,8 +219,9 @@ these properties have already been configured via the `STATE` variable.
 This is done by implementing the `getExtraDataConfig` function, which we've
 seen when we looked at
 [`IncrementalDomRenderer`](../metal-incremental-dom/IncrementalDomRenderer.md).
-That function goes through the list of all the template's params, and adds them
-to the return object. This will later be passed down to `ComponentDataManager`,
+That function goes through the list of all the template's params, and
+[adds them
+to the return object](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-soy/src/Soy.js#L32). This will later be passed down to `ComponentDataManager`,
 which will create the state properties for these.
 
 #### Nested component calls
@@ -255,8 +257,8 @@ The first place we need to check out to understand how this works is
 `Soy.register` again. If you check the [code](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-soy/src/Soy.js#L131)
 there again you'll notice that it makes a call to
 `SoyAop.registerForInterception`, passing it the template for the component.
-Entering this last function you'll see that it just replaces the original
-template function with `SoyAop.handleTemplateCall_`.
+Entering this last function you'll see that it just [replaces](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-soy/src/SoyAop.js#L52)
+the original template function with `SoyAop.handleTemplateCall_`.
 
 Back to `renderIncDom`, a function named `SoyAop.startInterception` is called
 [right before](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-soy/src/Soy.js#L146)

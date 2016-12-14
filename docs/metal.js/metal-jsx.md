@@ -43,8 +43,9 @@ developers to import from many different modules.
 ### JSXComponent
 
 If you open the entry file for **metal-jsx** you'll see that it's a very small
-file. It just exports a new type of component that uses a special renderer
-called `JSXRenderer` and a special data manager called `JSXDataManager`.
+file. It just exports a new type of component [that uses](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXComponent.js#L37)
+a special renderer called `JSXRenderer` and a special data manager called
+`JSXDataManager`.
 
 Besides that, the only thing this file does is to define a static function
 inside `JSXComponent`, called `render`, and have it just call this same function
@@ -74,11 +75,11 @@ console.log(component.element); // <div>Hello Foo</div>
 
 Let's start with the data manager. It extends from `ComponentDataManager` and
 overrides a few functions from it to change its behavior. The main function
-that is overridden is `createState_`. Instead of creating a single `State`
-instance and having it add properties directly to the component, this method
-will create two separate `State` instances: one that will add properties to a
-`props` object in the component, and another that will do it for a `state`
-object.
+that is overridden is [`createState_`](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXDataManager.js#L37).
+Instead of creating a single `State` instance and having it add properties
+directly to the component, this method will create two separate `State`
+instances: one that will add properties to a `props` object in the component,
+and another that will do it for a `state` object.
 
 Some of the functions from `ComponentDataManager` will keep working as they
 were before, mostly getting data from the `State` instance that is tied to the
@@ -87,7 +88,7 @@ were before, mostly getting data from the `State` instance that is tied to the
 
 Another function that is also overridden is `replaceNonInternal`. Instead of
 checking for properties not marked as `internal`, this method will now consider
-all properties inside `props` as such. It will also make sure that any
+all properties [inside `props`](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXDataManager.js#L112) as such. It will also make sure that any
 properties passed down, but that weren't previously defined via `PROPS`, will
 also be set inside the `props` object. Also, whenever `replaceNonInternal` is
 called, a function called `propsChanged` is called in the component, when it
@@ -97,7 +98,8 @@ exists.
 
 Before actually looking inside `JSXRenderer`, it's important to know that we
 assume that JSX components will be using a compiler called
-**babel-plugin-incremental-dom** to convert JSX calls into incremental dom. This
+[**babel-plugin-incremental-dom**](https://www.npmjs.com/package/babel-plugin-incremental-dom)
+to convert JSX calls into incremental dom. This
 compiler needs some helper javascript functions to work, which are copy/pasted
 to the file named `iDOMHelpers`.
 
