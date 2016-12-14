@@ -103,14 +103,14 @@ to convert JSX calls into incremental dom. This
 compiler needs some helper javascript functions to work, which are copy/pasted
 to the file named `iDOMHelpers`.
 
-One of these functions called `renderArbitrary`,
+[One of these functions](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/iDOMHelpers.js#L35) called `renderArbitrary`,
 is the one the compiler always wraps around things that are rendered in JSX
 via brackets, as in: `{name}`. If that content is a string, for example, it will
-call `IncrementalDOM.text`, some special functions are called instead, and
-arrays are looped. This is the only function that was changed by us to behave
+call `IncrementalDOM.text`, while arrays arrays are looped. This is the only
+function that was changed by us to behave
 a bit differently than the original version from the compiler. It can handle
-rendering children elements, by automatically calling the
-`IncrementalDomRenderer.renderChild` function we've seen before. Another use
+rendering children elements, by automatically [calling](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/iDOMHelpers.js#L46)
+the `IncrementalDomRenderer.renderChild` function we've seen before. Another use
 case is for when the content to be rendered is `undefined` or `null`, in which
 case `JSXRenderer.skipChild` is called. We'll see more about that later.
 
@@ -137,7 +137,7 @@ renders the first child it receives. This doesn't really use any JSX actually,
 so the compiler won't really touch this code. This means that nothing will be
 rendered if we use `IncrementalDomRenderer` though.
 
-That's why `JSXRenderer` overrides `renderIncDom` to be able to get the result
+That's why `JSXRenderer` [overrides](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L82) `renderIncDom` to be able to get the result
 value from the component's `render` function (if there is one), and pass it
 to `iDOMHelpers.renderArbitrary`. That way the appropriate incremental dom call
 will be made for it when necessary, or nothing will happen otherwise.
@@ -178,19 +178,28 @@ the first element. We can't actually render `null`, but we can make that kind
 of operation increment the position, so that the next generated key can take
 that into account.
 
-That's what the function named `generateKey` inside `JSXRenderer` does. It
-overrides a similar function inside `IncrementalDomRenderer`, and only does
-anything if no key has been given. In this case it will check if the element
-for the component being currently patched has already been rendered. If so,
-we'll generate the key according to the position we track for each element, and
-return it. When we're at the patching component's element we can't know what its
-position in the parent is though, since the rendering has started from it. In
-this case, we check the incremental dom data to see if the element had a key
-before, reusing it if it did.
+That's what the function named [`generateKey`](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L30)
+inside `JSXRenderer` does. It overrides the [original function](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-incremental-dom/src/IncrementalDomRenderer.js#L55)
+inside `IncrementalDomRenderer`, which is [called](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-incremental-dom/src/render/render.js#L275)
+whenever a new dom element is going to be rendered, to decide which `key` should
+be passed to incremental dom for it, if any.
+
+`generateKey` inside `JSXRenderer` only does anything if no key has been given.
+In this case it will check if the element for the component being currently
+patched has already [been rendered](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L35).
+If so, we'll generate the key according to the [position](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L36)
+we track for each element, and return it. When we're at the patching component's
+element we don't need to generate a position key though, since the
+rendering has started from it, and so it's already at the position it will be
+in the end. In this case, we check the incremental dom data to see if the element
+had a key before, [reusing it](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L38)
+if it did.
 
 Inside `iDOMHelpers`, whenever an `undefined` or `null` value is passed to
-`renderArbitrary`, it will call `JSXRenderer.skipChild`, which just increments
-the position via an incremental dom call. This increment operation is done via
+`renderArbitrary`, it will [call](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/iDOMHelpers.js#L51)
+`JSXRenderer.skipChild`, which just [increments the position](https://github.com/metal/metal.js/blob/909475385a9752748099d725cce2bea61e72396a/packages/metal-jsx/src/JSXRenderer.js#L95)
+via an incremental dom call. The reason why the increment operation is done via
 a call to `IncrementalDOM.elementVoid` to avoid problems if a children capture
 is currently happening, as in that case the function should only actually run
-when (and if) the children are rendered.
+when (and if) the children are rendered, which is when they're at their real
+parent.
