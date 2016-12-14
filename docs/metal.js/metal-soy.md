@@ -273,4 +273,4 @@ that `IncrementalDomRenderer` knows how to use for handling sub components.
 
 Next we'll take a look at: **metal-jsx**.
 
-[↪ Package: metal-jsx](../metal-jsx.md)
+[↪ Package: metal-jsx](metal-jsx.md)
