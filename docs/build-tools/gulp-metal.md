@@ -200,16 +200,37 @@ to handle the build, passing it any options that the developer may have chosen.
 There are other tasks inside the `globalTasks` function though. Another
 important one is **build:globals:jquery:js**. This task will also build all
 the source files to a bundle, but it will also make components exported there
-support being called via jQuery.
+support being called via jQuery. This last part is done by another module
+called [**metal-tools-build-jquery**](https://github.com/metal/metal-tools-build-jquery).
 
+Going inside this module you can see that it just [adds a footer](https://github.com/metal/metal-tools-build-jquery/blob/master/lib/pipelines/addJQueryAdapterRegistration.js#L8)
+to each file it receives. This footer adds a call to `JQueryAdapter.register`,
+using the file's name to create a name for the jQuery function that will be
+created for that component. `JQueryAdapter` comes from another module in the
+**metal** org, called [**metal-jquery-adapter](https://github.com/metal/metal-jquery-adapter).
 
-
-Note that there is another task inside **gulp-metal** that also turn components
-into jquery, and uses the same **metal-tools-build-amd** for this, called
-**build:amd:jquery:js**. The idea here is the same, the only difference is that
-this is done for AMD files instead of for a global bundle.
+Note that there is another task inside **gulp-metal** that also convert
+components to be used via  jQuery, and uses the same
+**metal-tools-build-jquery** module for this, called **build:amd:jquery:js**.
+The idea here is the same, the only difference is that this is done for AMD
+files instead of for a global bundle.
 
 #### AMD
+
+Besides a globals build, **gulp-metal** also provides a task for building files
+to AMD. Take a look at the following example, showing the output of the `State`
+file in **metal-state** after being built to AMD:
+
+```js
+define(
+  ['exports', 'metal/src/metal', 'metal-events/src/events'],
+  function (exports, _metal, _events) {
+    // State code here
+
+    exports.default = State;
+  }
+);
+```
 
 ### Soy task
 
