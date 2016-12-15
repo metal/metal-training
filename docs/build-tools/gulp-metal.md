@@ -334,3 +334,20 @@ to `goog.require` for external templates with a calls to `Soy.getTemplate`, to
 avoid problems with the order in which templates are imported via ES6.
 
 ### Test tasks
+
+Another important set of tasks are the ones related to tests. There are a few
+of them and they're all defined by a function [called `testTasks`](https://github.com/metal/gulp-metal/blob/3b67010e4632dd00ea04d01343619fb6cb4c4bee/lib/tasks/index.js#L25). You can see that, in the end, they all end up [calling](https://github.com/metal/gulp-metal/blob/3b67010e4632dd00ea04d01343619fb6cb4c4bee/lib/tasks/test.js#L29)
+`runKarma`, so let's go to that.
+
+`runKarma` will first try to figure out what karma configuration file to use.
+By default, it will look for a file named **karma<suffix>.conf.js**, where
+this suffix is passed to it. If this file isn't found, it will look for a
+generic **karma.conf.js** instead. If that's not found either, it'll use a file
+defined in the module **metal-karma-config**. If you [open](https://github.com/metal/metal-karma-config/blob/master/index.js#L1)
+that you'll see that it defines a simple config file that covers most of the
+use cases for testing Metal.js components. It will include all any metal
+dependencies that are present, as well as source and test files. The files
+will be transpiled to ES5 via babel.
+
+After defining the configuration to be used, `runKarma` will actually start
+karma to run the tests.
