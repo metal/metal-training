@@ -65,5 +65,3 @@ have more control. You can see a list of all available fiddles
 metal-component.
 * [Build Tools](docs/build-tools.md) - Covers the build tools created to be used
 in Metal.js projects, like gulp-metal.
-* [Important official repos](docs/important-repos.md) - Covers other important
-repos, like metal-router and metal-redux.
