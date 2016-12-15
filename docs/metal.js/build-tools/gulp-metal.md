@@ -215,4 +215,57 @@ another module for most of the work, called **metal-tools-soy**, which is also
 inside the **metal** organization. The logic provided by this module is required
 by all soy components in Metal.js, so it's important to understand what it does.
 
+Let's go straight to the [exported function](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L29)
+of the file that is used by the **soy** task. You can see that it's using a
+function called `combiner`, and passing it several different functions. This
+`combiner` function is used when you need to combine different stream handlers,
+so that one will be run after the other. It's the same idea as gulp's pipe,
+but in this case we're not directly inside a gulp task, we're actually building
+a plugin to be used inside a gulp pipe. In this case, `combiner` can be very
+helpful.
+
+#### Phase 1: params extraction
+
+The first stream handler that gets passed to `combiner` is using `gulp-if` to
+decide if `extractParams` should be called. `gulp-if` is another stream handler
+that will call what you pass to it according to a given flag. In this case,
+we're checking the `skipMetalGeneration` option. This option can be used in
+case the user wants to run the soy compiler, but skip all the extra handling
+done for Metal.js components. It's `false` by default.
+
+Let's assume that this option is `false`. In this case we'll run `extractParams`,
+which is where we go through the given soy files and get some information about
+the template's params that will be later used when adding more data to the final
+compiled soy file. To do this, it makes use of
+[soyparser](https://www.npmjs.com/package/soyparser),
+which will find all the templates and their params for us, so we just need to
+[store them](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L118)
+for later use.
+
+#### Phase 2: soy compilation
+
+After all the information we need has already been extracted from the original
+soy files, we can actually compile them to javascript. This is done by a [call](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L31)
+to `compileToIncDom`. This is another stream handler that will wait for all the
+soy files to arrive so that they can all be compiled with a single call to the
+official compiler from google, which will turn the templates into incremental
+dom calls. This compiler is a **jar** file though, so we run it as a [child process](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L205). After everything is done, we [emit](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L213)
+the compiled files to the stream.
+
+#### Phase 3: enhancement of compiled code for Metal.js
+
+After the files have been compiled, we enhance the results with a few more
+things that are important for the template's integration with Metal.js
+components. Some of these include:
+
+* [Adding params info](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L139)
+for each template
+* [Creating a simple component](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L150)
+and exporting it, to reduce boilerplates for components that don't need js code.
+* [Exporting](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L156)
+the object with all templates in the file.
+* [Replacing calls](https://github.com/metal/metal-tools-soy/blob/44dba5d7137f2fd4ef4d0ba1ac8cf9f2a06df876/lib/pipelines/compileSoy.js#L192)
+to `goog.require` for external templates with a calls to `Soy.getTemplate`, to
+avoid problems with the order in which templates are imported via ES6.
+
 ### Test tasks
