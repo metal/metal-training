@@ -232,6 +232,43 @@ define(
 );
 ```
 
+`State` has [two import statements](https://github.com/metal/metal.js/blob/60efbe1a22f180e0a92dc088ca5ad0f14807d012/packages/metal-state/src/State.js#L3),
+one for `metal` and another for `metal-events`. As you can see, the resulting
+AMD file also lists these dependencies, but it lists them in a more specific
+way, already pointing to the entry file. Note that it doesn't use the full path
+to the entry files though, but rather the module's name concatenated with the
+path starting from **src**. Building files to AMD format can be easily done by
+just using [babel](https://babeljs.io/) and its plugins, but this automatic
+resolution of names to entry files is done by our own code.
+
+The AMD gulp task is defined by [callling](https://github.com/metal/gulp-metal/blob/3b67010e4632dd00ea04d01343619fb6cb4c4bee/lib/tasks/index.js#L20)
+the `amdTasks` function. There you can see that, again, we're using a separate
+module for the main logic, this time called [**metal-tools-build-amd**](https://github.com/metal/metal-tools-build-amd/blob/master/lib/pipelines/buildAmd.js).
+
+The main thing we need to understand in this module is how it does this
+conversion from the imported module's name to its entry file's path. This is
+done inside an option called `resolveModuleSource` [passed to babel](https://github.com/metal/metal-tools-build-amd/blob/master/lib/pipelines/buildAmd.js#L28).
+There we'll just return the original source if it's a relative path, but
+otherwise we'll call `getAmdModuleId`, and pass the result of
+`renameWithoutJsExt` to it.
+
+So let's see `renameWithoutJsExt` first. This is the function that will find the
+entry file of the given module, and will return its full path, but without the
+**.js** extension. To do that, it calls a function from another module, called
+`babel-preset-metal-resolve-source`. This is a babel preset we use when we want
+this entry path resolution logic to run in babel. In this particular case, we
+can't just use it directly inside babel's configuration because we need this
+logic to run outside it as well.
+
+Inside `babel-preset-metal-resolve-source`, we first check the **package.json**
+file to see if it has a **jsnext:main** entry. If so, we'll [use that](https://github.com/metal/babel-preset-metal-resolve-source/blob/master/index.js#L22),
+otherwise we'll let node's [resolve](https://github.com/metal/babel-preset-metal-resolve-source/blob/master/lib/resolve.js#L7)
+function run its default behavior, of looking up **main** instead.
+
+The result from `renameWithoutJsExt` is wrapped around `getAmdModuleId`, which
+will transform the full path it receives into a path relative to `node_modules`.
+This is the path babel will use when building the AMD file.
+
 ### Soy task
 
 **gulp-metal** also provides a **soy** task, which is already setup to always
