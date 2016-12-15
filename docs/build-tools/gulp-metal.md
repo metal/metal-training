@@ -202,6 +202,13 @@ important one is **build:globals:jquery:js**. This task will also build all
 the source files to a bundle, but it will also make components exported there
 support being called via jQuery.
 
+
+
+Note that there is another task inside **gulp-metal** that also turn components
+into jquery, and uses the same **metal-tools-build-amd** for this, called
+**build:amd:jquery:js**. The idea here is the same, the only difference is that
+this is done for AMD files instead of for a global bundle.
+
 #### AMD
 
 ### Soy task
