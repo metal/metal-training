@@ -351,3 +351,9 @@ will be transpiled to ES5 via babel.
 
 After defining the configuration to be used, `runKarma` will actually start
 karma to run the tests.
+
+## Next steps
+
+Next we'll take a look at: **metal-cli**.
+
+[↪ Package: metal-cli](metal-cli.md)
