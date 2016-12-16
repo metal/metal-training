@@ -5,9 +5,9 @@ building javascript and soy, to be run via the terminal, like this.
 
 ## Usage
 
-To use it, first install **metal-jsx** through npm, like this:
+To use it, first install **metal-cli** through npm, like this:
 ```sh
-[sudo] npm install metal-jsx
+[sudo] npm install -g metal-cli
 ```
 
 You can easily check the list of supported commands for this cli by typing
