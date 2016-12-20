@@ -31,7 +31,7 @@ console.log(callsCount); // 1
 
 `EventEmitterProxy` makes this all work by listening to any event subscriptions
 on the target emitter via `onListener`, which we've
-[learned about](../EventEmitter.md#tracking-listeners-onlistener) when studying
+[learned about](EventEmitter.md#tracking-listeners-onlistener) when studying
 `EventEmitter`'s code. This is done right in the [constructor](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L69),
 which calls a function called `startProxy_`, which in turn does the [onListener](https://github.com/metal/metal.js/blob/master/packages/metal-events/src/EventEmitterProxy.js#L164)
 subscription.
